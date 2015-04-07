@@ -22,7 +22,7 @@ Summary: The Linux kernel
 %global zipsed -e 's/\.ko$/\.ko.xz/'
 %endif
 
-# % define buildid .local
+%define buildid .surfacepro3
 
 # baserelease defines which build revision of this kernel version we're
 # building.  We used to call this fedora_build, but the magical name
@@ -40,7 +40,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 1
+%global baserelease 999
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -406,7 +406,7 @@ BuildRequires: binutils-%{_build_arch}-linux-gnu, gcc-%{_build_arch}-linux-gnu
 %endif
 
 #Source0: ftp://ftp.kernel.org/pub/linux/kernel/v4.x/linux-%{kversion}.tar.xz
-Source0: ftp://ftp.kernel.org/pub/linux/kernel/v4.x/linux-4.0-rc6.tar.xz
+Source0: ftp://ftp.kernel.org/pub/linux/kernel/v4.x/testing/linux-4.0-rc6.tar.xz
 
 Source10: perf-man-%{kversion}.tar.gz
 Source11: x509.genkey
@@ -633,6 +633,13 @@ Patch26174: Input-ALPS-fix-max-coordinates-for-v5-and-v7-protoco.patch
 
 #CVE-2015-2150 rhbz 1196266 1200397
 Patch26175: xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
+
+#Surface Pro 3
+Patch9995: typecover3-multitouch.patch
+Patch9996: surface-pro-3-battery-indicator-fix.patch
+Patch9997: surface-pro-3-cameras.patch
+Patch9998: acpi-freeze-fix-sp3.patch
+Patch9999: surface-pro-3-buttons.patch
 
 # END OF PATCH DEFINITIONS
 
@@ -1378,6 +1385,13 @@ ApplyPatch Input-ALPS-fix-max-coordinates-for-v5-and-v7-protoco.patch
 
 #CVE-2015-2150 rhbz 1196266 1200397
 ApplyPatch xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
+
+#Surface Pro 3
+ApplyPatch typecover3-multitouch.patch
+ApplyPatch surface-pro-3-battery-indicator-fix.patch
+ApplyPatch surface-pro-3-cameras.patch
+ApplyPatch acpi-freeze-fix-sp3.patch
+ApplyPatch surface-pro-3-buttons.patch
 
 # END OF PATCH APPLICATIONS
 
