@@ -625,7 +625,7 @@ Patch26171: acpi-video-Add-force-native-backlight-quirk-for-Leno.patch
 Patch26175: xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 
 #Surface Pro 3
-Patch9995: typecover3-multitouch.patch
+Patch9995: typecover3-multitouch-withjp.patch
 Patch9996: surface-pro-3-battery-indicator-fix.patch
 Patch9997: surface-pro-3-cameras.patch
 Patch9998: acpi-freeze-fix-sp3.patch
@@ -1371,7 +1371,7 @@ ApplyPatch acpi-video-Add-force-native-backlight-quirk-for-Leno.patch
 ApplyPatch xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 
 #Surface Pro 3
-ApplyPatch typecover3-multitouch.patch
+ApplyPatch typecover3-multitouch-withjp.patch
 ApplyPatch surface-pro-3-battery-indicator-fix.patch
 ApplyPatch surface-pro-3-cameras.patch
 ApplyPatch acpi-freeze-fix-sp3.patch
