@@ -615,10 +615,8 @@ Patch26140: security-yama-Remove-unnecessary-selects-from-Kconfi.patch
 Patch26175: xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 
 #Surface Pro 3
-Patch9995: typecover3-multitouch-withjp.patch
-Patch9996: surface-pro-3-battery-indicator-fix.patch
-Patch9997: surface-pro-3-cameras.patch
-Patch9998: acpi-freeze-fix-sp3.patch
+Patch9997: typecover3-multitouch-withjp.patch
+Patch9998: surface-pro-3-cameras.patch
 Patch9999: surface-pro-3-buttons.patch
 
 # END OF PATCH DEFINITIONS
@@ -1352,9 +1350,7 @@ ApplyPatch xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 
 #Surface Pro 3
 ApplyPatch typecover3-multitouch-withjp.patch
-ApplyPatch surface-pro-3-battery-indicator-fix.patch
 ApplyPatch surface-pro-3-cameras.patch
-ApplyPatch acpi-freeze-fix-sp3.patch
 ApplyPatch surface-pro-3-buttons.patch
 
 # END OF PATCH APPLICATIONS
