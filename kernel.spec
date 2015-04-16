@@ -6,7 +6,7 @@ Summary: The Linux kernel
 # For a stable, released kernel, released_kernel should be 1. For rawhide
 # and/or a kernel built from an rc or git snapshot, released_kernel should
 # be 0.
-%global released_kernel 1
+%global released_kernel 0
 
 # Sign modules on x86.  Make sure the config files match this setting if more
 # architectures are added.
@@ -67,7 +67,7 @@ Summary: The Linux kernel
 # The rc snapshot level
 %define rcrev 0
 # The git snapshot level
-%define gitrev 0
+%define gitrev 3
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -122,7 +122,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 1
+%define debugbuildsenabled 0
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -608,18 +608,8 @@ Patch26131: acpi-video-Add-disable_native_backlight-quirk-for-Sa.patch
 #CVE-2015-0275 rhbz 1193907 1195178
 Patch26138: ext4-Allocate-entire-range-in-zero-range.patch
 
-#rhbz 1190947
-Patch26139: Bluetooth-ath3k-Add-support-Atheros-AR5B195-combo-Mi.patch
-
 #rhbz 1196825
 Patch26140: security-yama-Remove-unnecessary-selects-from-Kconfi.patch
-
-#rhbz 1201532
-Patch26168: HID-multitouch-add-support-of-clickpads.patch
-
-#rhbz 1187004
-Patch26170: acpi-video-Allow-forcing-native-backlight-on-non-win.patch
-Patch26171: acpi-video-Add-force-native-backlight-quirk-for-Leno.patch
 
 #CVE-2015-2150 rhbz 1196266 1200397
 Patch26175: xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
@@ -1354,18 +1344,8 @@ ApplyPatch acpi-video-Add-disable_native_backlight-quirk-for-Sa.patch
 #CVE-2015-0275 rhbz 1193907 1195178
 ApplyPatch ext4-Allocate-entire-range-in-zero-range.patch
 
-#rhbz 1190947
-ApplyPatch Bluetooth-ath3k-Add-support-Atheros-AR5B195-combo-Mi.patch
-
 #rhbz 1196825
 ApplyPatch security-yama-Remove-unnecessary-selects-from-Kconfi.patch
-
-#rhbz 1201532
-ApplyPatch HID-multitouch-add-support-of-clickpads.patch
-
-#rhbz 1187004
-ApplyPatch acpi-video-Allow-forcing-native-backlight-on-non-win.patch
-ApplyPatch acpi-video-Add-force-native-backlight-quirk-for-Leno.patch
 
 #CVE-2015-2150 rhbz 1196266 1200397
 ApplyPatch xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
@@ -2227,6 +2207,16 @@ fi
 #
 # 
 %changelog
+* Wed Apr 15 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git3.1
+- Linux v4.0-5833-g6c373ca89399
+
+* Wed Apr 15 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git2.1
+- Linux v4.0-3843-gbb0fd7ab0986
+
+* Tue Apr 14 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git1.1
+- Linux v4.0-2620-gb79013b2449c
+- Reenable debugging options.
+
 * Sun Apr 12 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.0.0-1
 - Linux v4.0
 
