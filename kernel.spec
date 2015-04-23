@@ -67,7 +67,7 @@ Summary: The Linux kernel
 # The rc snapshot level
 %define rcrev 0
 # The git snapshot level
-%define gitrev 3
+%define gitrev 12
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -605,14 +605,11 @@ Patch22000: weird-root-dentry-name-debug.patch
 #rhbz 1094948
 Patch26131: acpi-video-Add-disable_native_backlight-quirk-for-Sa.patch
 
-#CVE-2015-0275 rhbz 1193907 1195178
-Patch26138: ext4-Allocate-entire-range-in-zero-range.patch
-
-#rhbz 1196825
-Patch26140: security-yama-Remove-unnecessary-selects-from-Kconfi.patch
-
 #CVE-2015-2150 rhbz 1196266 1200397
 Patch26175: xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
+
+#rhbz 1212230
+Patch26176: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 
 #Surface Pro 3
 Patch9997: typecover3-multitouch-withjp.patch
@@ -1339,14 +1336,11 @@ ApplyPatch ath9k-rx-dma-stop-check.patch
 #rhbz 1094948
 ApplyPatch acpi-video-Add-disable_native_backlight-quirk-for-Sa.patch
 
-#CVE-2015-0275 rhbz 1193907 1195178
-ApplyPatch ext4-Allocate-entire-range-in-zero-range.patch
-
-#rhbz 1196825
-ApplyPatch security-yama-Remove-unnecessary-selects-from-Kconfi.patch
-
 #CVE-2015-2150 rhbz 1196266 1200397
 ApplyPatch xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
+
+#rhbz 1212230
+ApplyPatch Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 
 #Surface Pro 3
 ApplyPatch typecover3-multitouch-withjp.patch
@@ -2203,6 +2197,49 @@ fi
 #
 # 
 %changelog
+* Wed Apr 22 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Update AMD xgbe a0 aarch64 driver for 4.1
+
+* Wed Apr 22 2015 Peter Robinson <pbrobinson@fedoraproject.org> - 4.1.0-0.rc0.git12.1
+- Inital ARM updates for 4.1
+- Temporarily disable AMD ARM64 xgbe-a0 driver
+
+* Wed Apr 22 2015 Josh Boyer <jwboyer@fedoraproject.org> 
+- Linux v4.0-9804-gdb4fd9c5d072
+
+* Tue Apr 21 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git11.1
+- Linux v4.0-9362-g1fc149933fd4
+
+* Tue Apr 21 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Enable ECHO driver (rhbz 749884)
+
+* Mon Apr 20 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git10.1
+- Linux v4.0-8962-g14aa02449064
+- DRM merge
+
+* Mon Apr 20 2015 Dennis Gilmore <dennis@ausil.us>
+- enable mvebu for the LPAE kernel
+
+* Mon Apr 20 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git9.1
+- Linux v4.0-8158-g09d51602cf84
+
+* Sat Apr 18 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git8.1
+- Linux v4.0-7945-g7505256626b0
+
+* Fri Apr 17 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git7.1
+- Linux v4.0-7300-g4fc8adcfec3d
+- Patch from Benjamin Tissoires to fix 3 finger tap on synaptics (rhbz 1212230)
+- Add patch to support touchpad on Google Pixel 2 (rhbz 1209088)
+
+* Fri Apr 17 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git6.1
+- Linux v4.0-7209-g7d69cff26cea
+
+* Thu Apr 16 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git5.1
+- Linux v4.0-7084-g497a5df7bf6f
+
+* Thu Apr 16 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git4.1
+- Linux v4.0-6817-geea3a00264cf
+
 * Wed Apr 15 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git3.1
 - Linux v4.0-5833-g6c373ca89399
 
