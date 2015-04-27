@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 0
+%define rcrev 1
 # The git snapshot level
-%define gitrev 12
+%define gitrev 0
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -122,7 +122,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 0
+%define debugbuildsenabled 1
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -474,7 +474,7 @@ Patch00: %{stable_patch_00}
 # near the top of this spec file.
 %else
 %if 0%{?rcrev}
-Patch00 patch-4.%{upstream_sublevel}-rc%{rcrev}.xz
+Patch00: patch-4.%{upstream_sublevel}-rc%{rcrev}.xz
 %if 0%{?gitrev}
 Patch01: patch-4.%{upstream_sublevel}-rc%{rcrev}-git%{gitrev}.xz
 %endif
@@ -573,7 +573,7 @@ Patch15000: watchdog-Disable-watchdog-on-virtual-machines.patch
 # PPC
 
 # ARM64
-Patch21000: net-amd-Add-xgbe-a0-driver.patch
+Patch21000: amd-xgbe-a0-Add-support-for-XGBE-on-A0.patch
 Patch21001: amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
 Patch21002: arm64-avoid-needing-console-to-enable-serial-console.patch
 Patch21003: usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
@@ -610,6 +610,9 @@ Patch26175: xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 
 #rhbz 1212230
 Patch26176: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
+
+#rhbz 1208999
+Patch26177: SCSI-add-1024-max-sectors-black-list-flag.patch
 
 #Surface Pro 3
 Patch9997: typecover3-multitouch-withjp.patch
@@ -1115,7 +1118,7 @@ if [ ! -d kernel-%{kversion}%{?dist}/vanilla-%{vanillaversion} ]; then
 # Update vanilla to the latest upstream.
 # (non-released_kernel case only)
 %if 0%{?rcrev}
-#    ApplyPatch patch-4.%{upstream_sublevel}-rc%{rcrev}.xz
+    ApplyPatch patch-4.%{upstream_sublevel}-rc%{rcrev}.xz
 %if 0%{?gitrev}
     ApplyPatch patch-4.%{upstream_sublevel}-rc%{rcrev}-git%{gitrev}.xz
 %endif
@@ -1193,7 +1196,7 @@ ApplyPatch lib-cpumask-Make-CPUMASK_OFFSTACK-usable-without-deb.patch
 # PPC
 
 # ARM64
-ApplyPatch net-amd-Add-xgbe-a0-driver.patch
+ApplyPatch amd-xgbe-a0-Add-support-for-XGBE-on-A0.patch
 ApplyPatch amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
 ApplyPatch arm64-avoid-needing-console-to-enable-serial-console.patch
 ApplyPatch usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
@@ -1341,6 +1344,9 @@ ApplyPatch xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 
 #rhbz 1212230
 ApplyPatch Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
+
+#rhbz 1208999
+ApplyPatch SCSI-add-1024-max-sectors-black-list-flag.patch
 
 #Surface Pro 3
 ApplyPatch typecover3-multitouch-withjp.patch
@@ -2197,6 +2203,19 @@ fi
 #
 # 
 %changelog
+* Mon Apr 27 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc1.git0.1
+- Linux v4.1-rc1
+- Disable debugging options.
+
+* Fri Apr 24 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git14.1
+- Linux v4.0-10976-gd56a669ca59c
+
+* Fri Apr 24 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix iscsi with QNAP devices (rhbz 1208999)
+
+* Thu Apr 23 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git13.1
+- Linux v4.0-10710-g27cf3a16b253
+
 * Wed Apr 22 2015 Peter Robinson <pbrobinson@fedoraproject.org>
 - Update AMD xgbe a0 aarch64 driver for 4.1
 
