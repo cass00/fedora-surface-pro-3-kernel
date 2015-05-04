@@ -65,7 +65,7 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 1
+%define rcrev 2
 # The git snapshot level
 %define gitrev 0
 # Set rpm version accordingly
@@ -577,6 +577,7 @@ Patch21000: amd-xgbe-a0-Add-support-for-XGBE-on-A0.patch
 Patch21001: amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
 Patch21002: arm64-avoid-needing-console-to-enable-serial-console.patch
 Patch21003: usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
+Patch21004: arm64-acpi-drop-expert.patch
 
 # ARMv7
 Patch21020: ARM-tegra-usb-no-reset.patch
@@ -611,8 +612,8 @@ Patch26175: xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 #rhbz 1212230
 Patch26176: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 
-#rhbz 1208999
-Patch26177: SCSI-add-1024-max-sectors-black-list-flag.patch
+#rhbz 1210857
+Patch26192: blk-loop-avoid-too-many-pending-per-work-IO.patch
 
 #Surface Pro 3
 Patch9997: typecover3-multitouch-withjp.patch
@@ -1200,6 +1201,7 @@ ApplyPatch amd-xgbe-a0-Add-support-for-XGBE-on-A0.patch
 ApplyPatch amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
 ApplyPatch arm64-avoid-needing-console-to-enable-serial-console.patch
 ApplyPatch usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
+ApplyPatch arm64-acpi-drop-expert.patch
 
 #
 # ARM
@@ -1345,8 +1347,8 @@ ApplyPatch xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 #rhbz 1212230
 ApplyPatch Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 
-#rhbz 1208999
-ApplyPatch SCSI-add-1024-max-sectors-black-list-flag.patch
+#rhbz 1210857
+ApplyPatch blk-loop-avoid-too-many-pending-per-work-IO.patch
 
 #Surface Pro 3
 ApplyPatch typecover3-multitouch-withjp.patch
@@ -2203,6 +2205,21 @@ fi
 #
 # 
 %changelog
+* Mon May 04 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc2.git0.1
+- Linux v4.1-rc2
+- Disable debugging options.
+
+* Sun May  3 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Enable ACPI on aarch64
+- General ARMv7 updates
+
+* Fri May 01 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc1.git1.1
+- Linux v4.1-rc1-117-g4a152c3913fb
+- Reenable debugging options.
+
+* Tue Apr 28 2015 Justin M. Forbes <jforbes@fedoraproject.org>
+- Fix up boot times for live images (rhbz 1210857)
+
 * Mon Apr 27 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc1.git0.1
 - Linux v4.1-rc1
 - Disable debugging options.
