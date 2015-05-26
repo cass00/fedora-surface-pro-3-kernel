@@ -65,7 +65,7 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 3
+%define rcrev 5
 # The git snapshot level
 %define gitrev 0
 # Set rpm version accordingly
@@ -153,6 +153,7 @@ Summary: The Linux kernel
 %define kversion 4.%{base_sublevel}
 
 %define make_target bzImage
+%define image_install_path boot
 
 %define KVERREL %{version}-%{release}.%{_target_cpu}
 %define hdrarch %_target_cpu
@@ -245,21 +246,18 @@ Summary: The Linux kernel
 %define hdrarch i386
 %define pae PAE
 %define all_arch_configs kernel-%{version}-i?86*.config
-%define image_install_path boot
 %define kernel_image arch/x86/boot/bzImage
 %endif
 
 %ifarch x86_64
 %define asmarch x86
 %define all_arch_configs kernel-%{version}-x86_64*.config
-%define image_install_path boot
 %define kernel_image arch/x86/boot/bzImage
 %endif
 
 %ifarch %{power64}
 %define asmarch powerpc
 %define hdrarch powerpc
-%define image_install_path boot
 %define make_target vmlinux
 %define kernel_image vmlinux
 %define kernel_image_elf 1
@@ -275,7 +273,6 @@ Summary: The Linux kernel
 %define asmarch s390
 %define hdrarch s390
 %define all_arch_configs kernel-%{version}-s390x.config
-%define image_install_path boot
 %define make_target image
 %define kernel_image arch/s390/boot/image
 %define with_tools 0
@@ -283,7 +280,6 @@ Summary: The Linux kernel
 
 %ifarch %{arm}
 %define all_arch_configs kernel-%{version}-arm*.config
-%define image_install_path boot
 %define asmarch arm
 %define hdrarch arm
 %define pae lpae
@@ -306,7 +302,6 @@ Summary: The Linux kernel
 %define hdrarch arm64
 %define make_target Image.gz
 %define kernel_image arch/arm64/boot/Image.gz
-%define image_install_path boot
 %endif
 
 # Should make listnewconfig fail if there's config options
@@ -615,8 +610,13 @@ Patch26176: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 #rhbz 1210857
 Patch26192: blk-loop-avoid-too-many-pending-per-work-IO.patch
 
-#rhbz 1218662
-Patch26199: libata-Blacklist-queued-TRIM-on-all-Samsung-800-seri.patch
+#rhbz 1220915
+Patch26201: ovl-don-t-remove-non-empty-opaque-directory.patch
+
+#rhbz 1220118
+Patch26202: media-Fix-regression-in-some-more-dib0700-based-devi.patch
+
+Patch26203: v4l-uvcvideo-Fix-incorrect-bandwidth-with-Chicony-de.patch
 
 #Surface Pro 3
 Patch9997: typecover3-multitouch-withjp.patch
@@ -647,6 +647,7 @@ Requires(pre): %{kernel_prereq}\
 Requires(pre): %{initrd_prereq}\
 Requires(pre): linux-firmware >= 20130724-29.git31f6b30\
 Requires(preun): systemd >= 200\
+Conflicts: xorg-x11-drv-vmmouse < 13.0.99\
 %{expand:%%{?kernel%{?1:_%{1}}_conflicts:Conflicts: %%{kernel%{?1:_%{1}}_conflicts}}}\
 %{expand:%%{?kernel%{?1:_%{1}}_obsoletes:Obsoletes: %%{kernel%{?1:_%{1}}_obsoletes}}}\
 %{expand:%%{?kernel%{?1:_%{1}}_provides:Provides: %%{kernel%{?1:_%{1}}_provides}}}\
@@ -1353,8 +1354,13 @@ ApplyPatch Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 #rhbz 1210857
 ApplyPatch blk-loop-avoid-too-many-pending-per-work-IO.patch
 
-#rhbz 1218662
-ApplyPatch libata-Blacklist-queued-TRIM-on-all-Samsung-800-seri.patch
+#rhbz 1220915
+ApplyPatch ovl-don-t-remove-non-empty-opaque-directory.patch
+
+#rhbz 1220118
+ApplyPatch media-Fix-regression-in-some-more-dib0700-based-devi.patch
+
+ApplyPatch v4l-uvcvideo-Fix-incorrect-bandwidth-with-Chicony-de.patch
 
 #Surface Pro 3
 ApplyPatch typecover3-multitouch-withjp.patch
@@ -1495,7 +1501,6 @@ BuildKernel() {
     mkdir -p $RPM_BUILD_ROOT/%{image_install_path}
     mkdir -p $RPM_BUILD_ROOT/lib/modules/$KernelVer
 %if %{with_debuginfo}
-    mkdir -p $RPM_BUILD_ROOT%{debuginfodir}/boot
     mkdir -p $RPM_BUILD_ROOT%{debuginfodir}/%{image_install_path}
 %endif
 
@@ -2222,6 +2227,43 @@ fi
 #
 # 
 %changelog
+* Mon May 25 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc5.git0.1
+- Linux v4.1-rc5
+- Disable debugging options.
+
+* Thu May 21 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc4.git1.1
+- Linux v4.1-rc4-11-g1113cdfe7d2c
+- Reenable debugging options.
+- Add patch to fix discard on md RAID0 (rhbz 1223332)
+
+* Mon May 18 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc4.git0.1
+- Linux v4.1-rc4
+- Disable debugging options.
+
+* Mon May 18 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix incorrect bandwidth on some Chicony webcams
+- Fix DVB oops (rhbz 1220118)
+
+* Mon May 18 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc3.git4.1
+- Linux v4.1-rc3-346-gc0655fe9b090
+- Enable in-kernel vmmouse driver (rhbz 1214474)
+
+* Fri May 15 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc3.git3.1
+- Linux v4.1-rc3-177-gf0897f4cc0fc
+
+* Thu May 14 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix non-empty dir removal in overlayfs (rhbz 1220915)
+
+* Wed May 13 2015 Laura Abbott <labbott@fedoraproject.org>
+- Fix spew from KVM switch (rhbz 1219343)
+
+* Wed May 13 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc3.git2.1
+- Linux v4.1-rc3-165-g110bc76729d4
+
+* Tue May 12 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc3.git1.1
+- Linux v4.1-rc3-46-g4cfceaf0c087
+- Reenable debugging options.
+
 * Mon May 11 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc3.git0.1
 - Linux v4.1-rc3
 - Disable debugging options.
