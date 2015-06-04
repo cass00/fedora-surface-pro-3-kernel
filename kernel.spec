@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 5
+%define rcrev 6
 # The git snapshot level
-%define gitrev 0
+%define gitrev 1
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -481,17 +481,12 @@ Patch00: patch-4.%{base_sublevel}-git%{gitrev}.xz
 %endif
 %endif
 
-# we also need compile fixes for -vanilla
-Patch04: compile-fixes.patch
-
 # build tweak for build ID magic, even for -vanilla
 Patch05: kbuild-AFTER_LINK.patch
 
 %if !%{nopatches}
 
 
-# revert upstream patches we get via other methods
-Patch09: upstream-reverts.patch
 # Git trees.
 
 # Standalone patches
@@ -559,8 +554,6 @@ Patch1826: drm-i915-hush-check-crtc-state.patch
 # patches headed upstream
 Patch12016: disable-i8042-check-on-apple-mac.patch
 
-Patch14000: hibernate-freeze-filesystems.patch
-
 Patch14010: lis3-improve-handling-of-null-rate.patch
 
 Patch15000: watchdog-Disable-watchdog-on-virtual-machines.patch
@@ -596,11 +589,6 @@ Patch21242: criu-no-expert.patch
 #rhbz 892811
 Patch21247: ath9k-rx-dma-stop-check.patch
 
-Patch22000: weird-root-dentry-name-debug.patch
-
-#rhbz 1094948
-Patch26131: acpi-video-Add-disable_native_backlight-quirk-for-Sa.patch
-
 #CVE-2015-2150 rhbz 1196266 1200397
 Patch26175: xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 
@@ -610,13 +598,16 @@ Patch26176: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 #rhbz 1210857
 Patch26192: blk-loop-avoid-too-many-pending-per-work-IO.patch
 
-#rhbz 1220915
-Patch26201: ovl-don-t-remove-non-empty-opaque-directory.patch
-
 #rhbz 1220118
 Patch26202: media-Fix-regression-in-some-more-dib0700-based-devi.patch
 
 Patch26203: v4l-uvcvideo-Fix-incorrect-bandwidth-with-Chicony-de.patch
+
+#rhbz 1217249
+Patch26214: acpi_video-Add-enable_native_backlight-quirk-for-Mac.patch
+
+#rhbz 1225563
+Patch26215: HID-lenovo-set-INPUT_PROP_POINTING_STICK.patch
 
 #Surface Pro 3
 Patch9997: typecover3-multitouch-withjp.patch
@@ -1184,15 +1175,8 @@ done
 
 ApplyPatch kbuild-AFTER_LINK.patch
 
-#
-# misc small stuff to make things compile
-#
-ApplyOptionalPatch compile-fixes.patch
 
 %if !%{nopatches}
-
-# revert patches from upstream that conflict or that we get via other means
-ApplyOptionalPatch upstream-reverts.patch -R
 
 # Architecture patches
 # x86(-64)
@@ -1323,9 +1307,6 @@ ApplyPatch drm-i915-hush-check-crtc-state.patch
 # Patches headed upstream
 ApplyPatch disable-i8042-check-on-apple-mac.patch
 
-# FIXME: REBASE
-#ApplyPatch hibernate-freeze-filesystems.patch
-
 ApplyPatch lis3-improve-handling-of-null-rate.patch
 
 # Disable watchdog on virtual machines.
@@ -1334,16 +1315,11 @@ ApplyPatch watchdog-Disable-watchdog-on-virtual-machines.patch
 #rhbz 754518
 ApplyPatch scsi-sd_revalidate_disk-prevent-NULL-ptr-deref.patch
 
-#pplyPatch weird-root-dentry-name-debug.patch
-
 # https://fedoraproject.org/wiki/Features/Checkpoint_Restore
 ApplyPatch criu-no-expert.patch
 
 #rhbz 892811
 ApplyPatch ath9k-rx-dma-stop-check.patch
-
-#rhbz 1094948
-ApplyPatch acpi-video-Add-disable_native_backlight-quirk-for-Sa.patch
 
 #CVE-2015-2150 rhbz 1196266 1200397
 ApplyPatch xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
@@ -1354,13 +1330,16 @@ ApplyPatch Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 #rhbz 1210857
 ApplyPatch blk-loop-avoid-too-many-pending-per-work-IO.patch
 
-#rhbz 1220915
-ApplyPatch ovl-don-t-remove-non-empty-opaque-directory.patch
-
 #rhbz 1220118
 ApplyPatch media-Fix-regression-in-some-more-dib0700-based-devi.patch
 
 ApplyPatch v4l-uvcvideo-Fix-incorrect-bandwidth-with-Chicony-de.patch
+
+#rhbz 1217249
+ApplyPatch acpi_video-Add-enable_native_backlight-quirk-for-Mac.patch
+
+#rhbz 1225563
+ApplyPatch HID-lenovo-set-INPUT_PROP_POINTING_STICK.patch
 
 #Surface Pro 3
 ApplyPatch typecover3-multitouch-withjp.patch
@@ -1777,8 +1756,12 @@ BuildKernel %make_target %kernel_image %{pae}
 BuildKernel %make_target %kernel_image
 %endif
 
+%ifarch ppc64le
+%define no32bit NO_PERF_READ_VDSO32=1
+%endif
+
 %global perf_make \
-  make -s %{?cross_opts} %{?_smp_mflags} -C tools/perf V=1 WERROR=0 NO_LIBUNWIND=1 HAVE_CPLUS_DEMANGLE=1 NO_GTK2=1 NO_STRLCPY=1 NO_BIONIC=1 prefix=%{_prefix}
+  make -s %{?cross_opts} %{?_smp_mflags} -C tools/perf V=1 %{?no32bit} WERROR=0 NO_LIBUNWIND=1 HAVE_CPLUS_DEMANGLE=1 NO_GTK2=1 NO_STRLCPY=1 NO_BIONIC=1 prefix=%{_prefix}
 %if %{with_perf}
 # perf
 %{perf_make} DESTDIR=$RPM_BUILD_ROOT all
@@ -2227,6 +2210,21 @@ fi
 #
 # 
 %changelog
+* Wed Jun 03 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix from Ngo Than for perf build on ppc64le (rhbz 1227260)
+
+* Wed Jun 03 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc6.git1.1
+- Linux v4.1-rc6-44-g8cd9234c64c5
+
+* Tue Jun 02 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix middle button issues on external Lenovo keyboards (rhbz 1225563)
+
+* Mon Jun 01 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc6.git0.1
+- Linux v4.1-rc6
+
+* Thu May 28 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Add quirk for Mac Pro backlight (rhbz 1217249)
+
 * Mon May 25 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc5.git0.1
 - Linux v4.1-rc5
 - Disable debugging options.
