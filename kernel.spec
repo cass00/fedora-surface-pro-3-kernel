@@ -67,7 +67,7 @@ Summary: The Linux kernel
 # The rc snapshot level
 %define rcrev 6
 # The git snapshot level
-%define gitrev 1
+%define gitrev 2
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -608,6 +608,15 @@ Patch26214: acpi_video-Add-enable_native_backlight-quirk-for-Mac.patch
 
 #rhbz 1225563
 Patch26215: HID-lenovo-set-INPUT_PROP_POINTING_STICK.patch
+
+#rhbz 1188695
+Patch26218: n_tty-Fix-auditing-support-for-cannonical-mode.patch
+
+#rhbz 1133378
+Patch26219: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
+
+#rhbz 1226743
+Patch26221: drm-i915-turn-off-wc-mmaps.patch
 
 #Surface Pro 3
 Patch9997: typecover3-multitouch-withjp.patch
@@ -1340,6 +1349,15 @@ ApplyPatch acpi_video-Add-enable_native_backlight-quirk-for-Mac.patch
 
 #rhbz 1225563
 ApplyPatch HID-lenovo-set-INPUT_PROP_POINTING_STICK.patch
+
+#rhbz 1188695
+ApplyPatch n_tty-Fix-auditing-support-for-cannonical-mode.patch
+
+#rhbz 1133378
+ApplyPatch firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
+
+#rhbz 1226743
+ApplyPatch drm-i915-turn-off-wc-mmaps.patch
 
 #Surface Pro 3
 ApplyPatch typecover3-multitouch-withjp.patch
@@ -2210,6 +2228,18 @@ fi
 #
 # 
 %changelog
+* Thu Jun 04 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc6.git2.1
+- Linux v4.1-rc6-49-g8a7deb362b76
+
+* Thu Jun 04 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Add patch to turn of WC mmaps on i915 from airlied (rhbz 1226743)
+
+* Wed Jun 03 2015 Laura Abbott <labbott@fedoraproject.org>
+- Drop that blasted firwmare warning until we get a real fix (rhbz 1133378)
+
+* Wed Jun 03 2015 Laura Abbott <labbott@fedoraproject.org>
+- Fix auditing of canonical mode (rhbz 1188695)
+
 * Wed Jun 03 2015 Josh Boyer <jwboyer@fedoraproject.org>
 - Fix from Ngo Than for perf build on ppc64le (rhbz 1227260)
 
