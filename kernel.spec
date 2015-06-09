@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 6
+%define rcrev 7
 # The git snapshot level
-%define gitrev 2
+%define gitrev 0
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -609,14 +609,14 @@ Patch26214: acpi_video-Add-enable_native_backlight-quirk-for-Mac.patch
 #rhbz 1225563
 Patch26215: HID-lenovo-set-INPUT_PROP_POINTING_STICK.patch
 
-#rhbz 1188695
-Patch26218: n_tty-Fix-auditing-support-for-cannonical-mode.patch
-
 #rhbz 1133378
 Patch26219: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 
 #rhbz 1226743
 Patch26221: drm-i915-turn-off-wc-mmaps.patch
+
+#rhbz 1223051
+Patch26230: Input-synaptics-add-min-max-quirk-for-Lenovo-S540.patch
 
 #Surface Pro 3
 Patch9997: typecover3-multitouch-withjp.patch
@@ -1350,14 +1350,14 @@ ApplyPatch acpi_video-Add-enable_native_backlight-quirk-for-Mac.patch
 #rhbz 1225563
 ApplyPatch HID-lenovo-set-INPUT_PROP_POINTING_STICK.patch
 
-#rhbz 1188695
-ApplyPatch n_tty-Fix-auditing-support-for-cannonical-mode.patch
-
 #rhbz 1133378
 ApplyPatch firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 
 #rhbz 1226743
 ApplyPatch drm-i915-turn-off-wc-mmaps.patch
+
+#rhbz 1223051
+ApplyPatch Input-synaptics-add-min-max-quirk-for-Lenovo-S540.patch
 
 #Surface Pro 3
 ApplyPatch typecover3-multitouch-withjp.patch
@@ -2228,6 +2228,12 @@ fi
 #
 # 
 %changelog
+* Tue Jun 09 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix touchpad for Thinkpad S540 (rhbz 1223051)
+
+* Mon Jun 08 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc7.git0.1
+- Linux v4.1-rc7
+
 * Thu Jun 04 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc6.git2.1
 - Linux v4.1-rc6-49-g8a7deb362b76
 
