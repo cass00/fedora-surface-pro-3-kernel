@@ -65,7 +65,7 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 7
+%define rcrev 8
 # The git snapshot level
 %define gitrev 0
 # Set rpm version accordingly
@@ -615,8 +615,10 @@ Patch26219: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 #rhbz 1226743
 Patch26221: drm-i915-turn-off-wc-mmaps.patch
 
-#rhbz 1223051
-Patch26230: Input-synaptics-add-min-max-quirk-for-Lenovo-S540.patch
+# CVE-2015-XXXX rhbz 1230770 1230774
+Patch26231: kvm-x86-fix-kvm_apic_has_events-to-check-for-NULL-po.patch
+
+Patch26232: mm-shmem_zero_setup-skip-security-check-and-lockdep-.patch
 
 #Surface Pro 3
 Patch9997: typecover3-multitouch-withjp.patch
@@ -1356,8 +1358,10 @@ ApplyPatch firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 #rhbz 1226743
 ApplyPatch drm-i915-turn-off-wc-mmaps.patch
 
-#rhbz 1223051
-ApplyPatch Input-synaptics-add-min-max-quirk-for-Lenovo-S540.patch
+# CVE-2015-XXXX rhbz 1230770 1230774
+ApplyPatch kvm-x86-fix-kvm_apic_has_events-to-check-for-NULL-po.patch
+
+ApplyPatch mm-shmem_zero_setup-skip-security-check-and-lockdep-.patch
 
 #Surface Pro 3
 ApplyPatch typecover3-multitouch-withjp.patch
@@ -2228,6 +2232,15 @@ fi
 #
 # 
 %changelog
+* Mon Jun 15 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc8.git0.1
+- Linux v4.1-rc8
+
+* Fri Jun 12 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc7.git1.1
+- Linux v4.1-rc7-72-gdf5f4158415b
+
+* Fri Jun 12 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-XXXX kvm: NULL ptr deref in kvm_apic_has_events (rhbz 1230770 1230774)
+
 * Tue Jun 09 2015 Josh Boyer <jwboyer@fedoraproject.org>
 - Fix touchpad for Thinkpad S540 (rhbz 1223051)
 
