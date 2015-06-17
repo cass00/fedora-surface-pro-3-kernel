@@ -621,7 +621,7 @@ Patch26231: kvm-x86-fix-kvm_apic_has_events-to-check-for-NULL-po.patch
 Patch26232: mm-shmem_zero_setup-skip-security-check-and-lockdep-.patch
 
 #Surface Pro 3
-Patch9997: typecover3-multitouch-withjp.patch
+Patch9997: typecover3-multitouch.patch
 Patch9998: surface-pro-3-cameras.patch
 Patch9999: surface-pro-3-buttons.patch
 
@@ -1364,7 +1364,7 @@ ApplyPatch kvm-x86-fix-kvm_apic_has_events-to-check-for-NULL-po.patch
 ApplyPatch mm-shmem_zero_setup-skip-security-check-and-lockdep-.patch
 
 #Surface Pro 3
-ApplyPatch typecover3-multitouch-withjp.patch
+ApplyPatch typecover3-multitouch.patch
 ApplyPatch surface-pro-3-cameras.patch
 ApplyPatch surface-pro-3-buttons.patch
 
