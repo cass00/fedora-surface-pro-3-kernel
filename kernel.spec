@@ -41,7 +41,7 @@ Summary: The Linux kernel
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
 
-%global baserelease 999
+%global baserelease 9999
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
