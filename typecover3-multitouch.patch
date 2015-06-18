@@ -1,3 +1,17 @@
+From 66919635dc2db37c9291c3ed0e49b7fea6feaf36 Mon Sep 17 00:00:00 2001
+From: Donavan Lance <tusklahoma@gmail.com>
+Date: Thu, 18 Jun 2015 18:02:59 -0400
+Subject: [PATCH] Add support for new Microsoft Type Cover 3 USB product IDs
+
+Signed-off-by: Donavan Lance <tusklahoma@gmail.com>
+---
+ drivers/hid/hid-core.c          |  8 --------
+ drivers/hid/hid-ids.h           | 12 +++++++-----
+ drivers/hid/hid-microsoft.c     |  5 -----
+ drivers/hid/hid-multitouch.c    | 14 ++++++++++++++
+ drivers/hid/usbhid/hid-quirks.c |  4 +++-
+ 5 files changed, 24 insertions(+), 19 deletions(-)
+
 diff --git a/drivers/hid/hid-core.c b/drivers/hid/hid-core.c
 index 722a925..717ffe1 100644
 --- a/drivers/hid/hid-core.c
@@ -103,3 +117,6 @@ index 4696895e..e55504c 100644
  	{ USB_VENDOR_ID_MSI, USB_DEVICE_ID_MSI_GT683R_LED_PANEL, HID_QUIRK_NO_INIT_REPORTS },
  	{ USB_VENDOR_ID_NEXIO, USB_DEVICE_ID_NEXIO_MULTITOUCH_PTI0750, HID_QUIRK_NO_INIT_REPORTS },
  	{ USB_VENDOR_ID_NOVATEK, USB_DEVICE_ID_NOVATEK_MOUSE, HID_QUIRK_NO_INIT_REPORTS },
+-- 
+2.4.3
+
