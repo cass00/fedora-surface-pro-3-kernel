@@ -1,9 +1,6 @@
-From 66919635dc2db37c9291c3ed0e49b7fea6feaf36 Mon Sep 17 00:00:00 2001
-From: Donavan Lance <tusklahoma@gmail.com>
-Date: Thu, 18 Jun 2015 18:02:59 -0400
 Subject: [PATCH] Add support for new Microsoft Type Cover 3 USB product IDs
 
-Signed-off-by: Donavan Lance <tusklahoma@gmail.com>
+Signed-off-by: Donavan Lance <tusklahoma <at> gmail.com>
 ---
  drivers/hid/hid-core.c          |  8 --------
  drivers/hid/hid-ids.h           | 12 +++++++-----
