@@ -15,7 +15,7 @@ Upstream-status: Fedora mustard
  7 files changed, 65 insertions(+), 10 deletions(-)
 
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index d99c8c38914f..bfb77c4faae6 100644
+index 9bcd51050511..0290275eaaf8 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
 @@ -70,6 +70,11 @@
@@ -30,7 +30,7 @@ index d99c8c38914f..bfb77c4faae6 100644
  #include <video/edid.h>
  
  #include <asm/mtrr.h>
-@@ -1283,6 +1288,37 @@ void __init i386_reserve_resources(void)
+@@ -1287,6 +1292,37 @@ void __init i386_reserve_resources(void)
  
  #endif /* CONFIG_X86_32 */
  
@@ -81,11 +81,11 @@ index 421e29e4cd81..61c1eb97806c 100644
  	input_set_drvdata(udev->dev, udev);
  
 diff --git a/drivers/tty/sysrq.c b/drivers/tty/sysrq.c
-index 843f2cdc280b..13a5a3843d4c 100644
+index 2847108cc8dd..e8225c68dbc5 100644
 --- a/drivers/tty/sysrq.c
 +++ b/drivers/tty/sysrq.c
 @@ -465,6 +465,7 @@ static struct sysrq_key_op *sysrq_key_table[36] = {
- 	&sysrq_showstate_blocked_op,	/* w */
+ 	/* x: May be registered on mips for TLB dump */
  	/* x: May be registered on ppc/powerpc for xmon */
  	/* x: May be registered on sparc64 for global PMU dump */
 +	/* x: May be registered on x86_64 for disabling secure boot */
@@ -127,7 +127,7 @@ index 843f2cdc280b..13a5a3843d4c 100644
  }
  EXPORT_SYMBOL(handle_sysrq);
  
-@@ -644,7 +649,7 @@ static void sysrq_do_reset(unsigned long _state)
+@@ -645,7 +650,7 @@ static void sysrq_do_reset(unsigned long _state)
  static void sysrq_handle_reset_request(struct sysrq_state *state)
  {
  	if (state->reset_requested)
@@ -136,7 +136,7 @@ index 843f2cdc280b..13a5a3843d4c 100644
  
  	if (sysrq_reset_downtime_ms)
  		mod_timer(&state->keyreset_timer,
-@@ -795,8 +800,10 @@ static bool sysrq_handle_keypress(struct sysrq_state *sysrq,
+@@ -796,8 +801,10 @@ static bool sysrq_handle_keypress(struct sysrq_state *sysrq,
  
  	default:
  		if (sysrq->active && value && value != 2) {
@@ -148,7 +148,7 @@ index 843f2cdc280b..13a5a3843d4c 100644
  		}
  		break;
  	}
-@@ -1091,7 +1098,7 @@ static ssize_t write_sysrq_trigger(struct file *file, const char __user *buf,
+@@ -1077,7 +1084,7 @@ static ssize_t write_sysrq_trigger(struct file *file, const char __user *buf,
  
  		if (get_user(c, buf))
  			return -EFAULT;
@@ -228,7 +228,7 @@ index 4121345498e0..0ff3cef5df96 100644
  
  	return 0;
 diff --git a/kernel/module.c b/kernel/module.c
-index e7065d683640..731d2653c60d 100644
+index 4c682ab7e640..9be8d9c03c90 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
 @@ -107,9 +107,9 @@ struct list_head *kdb_modules = &modules; /* kdb needs the list of modules */

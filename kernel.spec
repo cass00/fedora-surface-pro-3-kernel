@@ -6,7 +6,7 @@ Summary: The Linux kernel
 # For a stable, released kernel, released_kernel should be 1. For rawhide
 # and/or a kernel built from an rc or git snapshot, released_kernel should
 # be 0.
-%global released_kernel 1
+%global released_kernel 0
 
 # Sign modules on x86.  Make sure the config files match this setting if more
 # architectures are added.
@@ -68,7 +68,7 @@ Summary: The Linux kernel
 # The rc snapshot level
 %define rcrev 0
 # The git snapshot level
-%define gitrev 0
+%define gitrev 2
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -123,7 +123,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 1
+%define debugbuildsenabled 0
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -238,6 +238,7 @@ Summary: The Linux kernel
 %ifnarch %{power64}
 %define with_bootwrapper 0
 %define with_sparse 0
+%define with_perf 0
 %endif
 
 # Per-arch tweaks
@@ -266,7 +267,7 @@ Summary: The Linux kernel
 %define all_arch_configs kernel-%{version}-ppc64*.config
 %endif
 %ifarch ppc64le
-%define all_arch_configs kernel-%{version}-ppc64le.config
+%define all_arch_configs kernel-%{version}-ppc64le*.config
 %endif
 %endif
 
@@ -432,7 +433,7 @@ Source32: config-x86-32-generic
 
 Source40: config-x86_64-generic
 
-Source50: config-powerpc-generic
+Source50: config-powerpc64-generic
 Source53: config-powerpc64
 Source54: config-powerpc64p7
 Source55: config-powerpc64le
@@ -487,140 +488,116 @@ Patch05: kbuild-AFTER_LINK.patch
 
 %if !%{nopatches}
 
-
 # Git trees.
 
 # Standalone patches
 
-Patch450: input-kill-stupid-messages.patch
-Patch452: no-pcspkr-modalias.patch
+Patch451: lib-cpumask-Make-CPUMASK_OFFSTACK-usable-without-deb.patch
 
-Patch470: die-floppy-die.patch
+Patch452: amd-xgbe-a0-Add-support-for-XGBE-on-A0.patch
 
-Patch500: Revert-Revert-ACPI-video-change-acpi-video-brightnes.patch
+Patch453: amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
 
-Patch510: input-silence-i8042-noise.patch
-Patch530: silence-fbcon-logo.patch
+Patch454: arm64-avoid-needing-console-to-enable-serial-console.patch
 
-Patch600: lib-cpumask-Make-CPUMASK_OFFSTACK-usable-without-deb.patch
+Patch455: usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
 
-#rhbz 1126580
-Patch601: Kbuild-Add-an-option-to-enable-GCC-VTA.patch
+Patch456: arm64-acpi-drop-expert-patch.patch
 
-Patch800: crash-driver.patch
+Patch457: ARM-tegra-usb-no-reset.patch
 
-# crypto/
+Patch458: arm-dts-am335x-boneblack-lcdc-add-panel-info.patch
 
-# secure boot
-Patch1000: Add-secure_modules-call.patch
-Patch1001: PCI-Lock-down-BAR-access-when-module-security-is-ena.patch
-Patch1002: x86-Lock-down-IO-port-access-when-module-security-is.patch
-Patch1003: ACPI-Limit-access-to-custom_method.patch
-Patch1004: asus-wmi-Restrict-debugfs-interface-when-module-load.patch
-Patch1005: Restrict-dev-mem-and-dev-kmem-when-module-loading-is.patch
-Patch1006: acpi-Ignore-acpi_rsdp-kernel-parameter-when-module-l.patch
-Patch1007: kexec-Disable-at-runtime-if-the-kernel-enforces-modu.patch
-Patch1008: x86-Restrict-MSR-access-when-module-loading-is-restr.patch
-Patch1009: Add-option-to-automatically-enforce-module-signature.patch
-Patch1010: efi-Disable-secure-boot-if-shim-is-in-insecure-mode.patch
-Patch1011: efi-Make-EFI_SECURE_BOOT_SIG_ENFORCE-depend-on-EFI.patch
-Patch1012: efi-Add-EFI_SECURE_BOOT-bit.patch
-Patch1013: hibernate-Disable-in-a-signed-modules-environment.patch
+Patch459: arm-dts-am335x-boneblack-add-cpu0-opp-points.patch
 
-Patch1014: Add-EFI-signature-data-types.patch
-Patch1015: Add-an-EFI-signature-blob-parser-and-key-loader.patch
-Patch1016: KEYS-Add-a-system-blacklist-keyring.patch
-Patch1017: MODSIGN-Import-certificates-from-UEFI-Secure-Boot.patch
-Patch1018: MODSIGN-Support-not-importing-certs-from-db.patch
+Patch460: arm-dts-am335x-bone-common-setup-default-pinmux-http.patch
 
-Patch1019: Add-sysrq-option-to-disable-secure-boot-mode.patch
+Patch461: arm-dts-am335x-bone-common-add-uart2_pins-uart4_pins.patch
 
-# esrt
-Patch1020: efi-Add-esrt-support.patch
+Patch462: pinctrl-pinctrl-single-must-be-initialized-early.patch
 
-# virt + ksm patches
+Patch463: arm-i.MX6-Utilite-device-dtb.patch
 
-# DRM
+Patch464: arm-highbank-l2-reverts.patch
 
-# nouveau + drm fixes
-# intel drm is all merged upstream
-Patch1826: drm-i915-hush-check-crtc-state.patch
+Patch465: Revert-Revert-ACPI-video-change-acpi-video-brightnes.patch
 
-# Quiet boot fixes
+Patch466: input-kill-stupid-messages.patch
 
-# fs fixes
+Patch467: die-floppy-die.patch
 
-# NFSv4
+Patch468: no-pcspkr-modalias.patch
 
-# patches headed upstream
-Patch12016: disable-i8042-check-on-apple-mac.patch
+Patch469: input-silence-i8042-noise.patch
 
-Patch14010: lis3-improve-handling-of-null-rate.patch
+Patch470: silence-fbcon-logo.patch
 
-Patch15000: watchdog-Disable-watchdog-on-virtual-machines.patch
+Patch471: Kbuild-Add-an-option-to-enable-GCC-VTA.patch
 
-# PPC
+Patch472: crash-driver.patch
 
-# ARM64
-Patch16000: amd-xgbe-a0-Add-support-for-XGBE-on-A0.patch
-Patch16001: amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
-Patch16002: arm64-avoid-needing-console-to-enable-serial-console.patch
-Patch16003: usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
-Patch16004: arm64-acpi-drop-expert.patch
+Patch473: Add-secure_modules-call.patch
 
-# ARMv7
-Patch16020: ARM-tegra-usb-no-reset.patch
-Patch16021: arm-dts-am335x-boneblack-lcdc-add-panel-info.patch
-Patch16022: arm-dts-am335x-boneblack-add-cpu0-opp-points.patch
-Patch16023: arm-dts-am335x-bone-common-enable-and-use-i2c2.patch
-Patch16024: arm-dts-am335x-bone-common-setup-default-pinmux-http.patch
-Patch16025: arm-dts-am335x-bone-common-add-uart2_pins-uart4_pins.patch
-Patch16026: pinctrl-pinctrl-single-must-be-initialized-early.patch
+Patch474: PCI-Lock-down-BAR-access-when-module-security-is-ena.patch
 
-Patch16028: arm-i.MX6-Utilite-device-dtb.patch
+Patch475: x86-Lock-down-IO-port-access-when-module-security-is.patch
 
-Patch16030: arm-highbank-l2-reverts.patch
+Patch476: ACPI-Limit-access-to-custom_method.patch
 
-#rhbz 754518
-Patch21235: scsi-sd_revalidate_disk-prevent-NULL-ptr-deref.patch
+Patch477: asus-wmi-Restrict-debugfs-interface-when-module-load.patch
 
-# https://fedoraproject.org/wiki/Features/Checkpoint_Restore
-Patch21242: criu-no-expert.patch
+Patch478: Restrict-dev-mem-and-dev-kmem-when-module-loading-is.patch
 
-#rhbz 892811
-Patch21247: ath9k-rx-dma-stop-check.patch
+Patch479: acpi-Ignore-acpi_rsdp-kernel-parameter-when-module-l.patch
 
-#CVE-2015-2150 rhbz 1196266 1200397
-Patch26175: xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
+Patch480: kexec-Disable-at-runtime-if-the-kernel-enforces-modu.patch
 
-#rhbz 1212230
-Patch26176: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
+Patch481: x86-Restrict-MSR-access-when-module-loading-is-restr.patch
 
-#rhbz 1210857
-Patch26192: blk-loop-avoid-too-many-pending-per-work-IO.patch
+Patch482: Add-option-to-automatically-enforce-module-signature.patch
 
-#rhbz 1220118
-Patch26202: media-Fix-regression-in-some-more-dib0700-based-devi.patch
+Patch483: efi-Disable-secure-boot-if-shim-is-in-insecure-mode.patch
 
-Patch26203: v4l-uvcvideo-Fix-incorrect-bandwidth-with-Chicony-de.patch
+Patch484: efi-Make-EFI_SECURE_BOOT_SIG_ENFORCE-depend-on-EFI.patch
 
-#rhbz 1217249
-Patch26214: acpi_video-Add-enable_native_backlight-quirk-for-Mac.patch
+Patch485: efi-Add-EFI_SECURE_BOOT-bit.patch
 
-#rhbz 1225563
-Patch26215: HID-lenovo-set-INPUT_PROP_POINTING_STICK.patch
+Patch486: hibernate-Disable-in-a-signed-modules-environment.patch
 
-#rhbz 1133378
-Patch26219: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
+Patch487: Add-EFI-signature-data-types.patch
 
-#rhbz 1226743
-Patch26221: drm-i915-turn-off-wc-mmaps.patch
+Patch488: Add-an-EFI-signature-blob-parser-and-key-loader.patch
 
-# CVE-2015-XXXX rhbz 1230770 1230774
-Patch26231: kvm-x86-fix-kvm_apic_has_events-to-check-for-NULL-po.patch
+Patch489: KEYS-Add-a-system-blacklist-keyring.patch
 
-# rhbz 1227891
-Patch26250: HID-rmi-Disable-populating-F30-when-the-touchpad-has.patch
+Patch490: MODSIGN-Import-certificates-from-UEFI-Secure-Boot.patch
+
+Patch491: MODSIGN-Support-not-importing-certs-from-db.patch
+
+Patch492: Add-sysrq-option-to-disable-secure-boot-mode.patch
+
+Patch493: drm-i915-hush-check-crtc-state.patch
+
+Patch494: disable-i8042-check-on-apple-mac.patch
+
+Patch495: lis3-improve-handling-of-null-rate.patch
+
+Patch496: watchdog-Disable-watchdog-on-virtual-machines.patch
+
+Patch497: scsi-sd_revalidate_disk-prevent-NULL-ptr-deref.patch
+
+Patch498: criu-no-expert.patch
+
+Patch499: ath9k-rx-dma-stop-check.patch
+
+Patch500: xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
+
+Patch501: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
+
+Patch502: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
+
+Patch503: drm-i915-turn-off-wc-mmaps.patch
+
 
 #Surface Pro 3
 Patch9997: typecover3-multitouch.patch
@@ -1188,183 +1165,114 @@ done
 
 ApplyPatch kbuild-AFTER_LINK.patch
 
-
 %if !%{nopatches}
 
-# Architecture patches
-# x86(-64)
 ApplyPatch lib-cpumask-Make-CPUMASK_OFFSTACK-usable-without-deb.patch
 
-# PPC
-
-# ARM64
 ApplyPatch amd-xgbe-a0-Add-support-for-XGBE-on-A0.patch
-ApplyPatch amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
-ApplyPatch arm64-avoid-needing-console-to-enable-serial-console.patch
-ApplyPatch usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
-ApplyPatch arm64-acpi-drop-expert.patch
 
-#
-# ARM
-#
+ApplyPatch amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
+
+ApplyPatch arm64-avoid-needing-console-to-enable-serial-console.patch
+
+ApplyPatch usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
+
+ApplyPatch arm64-acpi-drop-expert-patch.patch
+
 ApplyPatch ARM-tegra-usb-no-reset.patch
 
 ApplyPatch arm-dts-am335x-boneblack-lcdc-add-panel-info.patch
+
 ApplyPatch arm-dts-am335x-boneblack-add-cpu0-opp-points.patch
-ApplyPatch arm-dts-am335x-bone-common-enable-and-use-i2c2.patch
+
 ApplyPatch arm-dts-am335x-bone-common-setup-default-pinmux-http.patch
+
 ApplyPatch arm-dts-am335x-bone-common-add-uart2_pins-uart4_pins.patch
+
 ApplyPatch pinctrl-pinctrl-single-must-be-initialized-early.patch
 
 ApplyPatch arm-i.MX6-Utilite-device-dtb.patch
 
 ApplyPatch arm-highbank-l2-reverts.patch
 
-#
-# bugfixes to drivers and filesystems
-#
-
-# ext4
-
-# xfs
-
-# btrfs
-
-# eCryptfs
-
-# NFSv4
-
-# USB
-
-# WMI
-
-# ACPI
-
-#
-# PCI
-#
-
-#
-# SCSI Bits.
-#
-
-# ACPI
-
 ApplyPatch Revert-Revert-ACPI-video-change-acpi-video-brightnes.patch
 
-# ALSA
-
-# Networking
-
-# Misc fixes
-# The input layer spews crap no-one cares about.
 ApplyPatch input-kill-stupid-messages.patch
 
-# stop floppy.ko from autoloading during udev...
 ApplyPatch die-floppy-die.patch
 
 ApplyPatch no-pcspkr-modalias.patch
 
-# Silence some useless messages that still get printed with 'quiet'
 ApplyPatch input-silence-i8042-noise.patch
 
-# Make fbcon not show the penguins with 'quiet'
 ApplyPatch silence-fbcon-logo.patch
 
-# Changes to upstream defaults.
-#rhbz 1126580
 ApplyPatch Kbuild-Add-an-option-to-enable-GCC-VTA.patch
 
-# /dev/crash driver.
 ApplyPatch crash-driver.patch
 
-# crypto/
-
-# secure boot
 ApplyPatch Add-secure_modules-call.patch
+
 ApplyPatch PCI-Lock-down-BAR-access-when-module-security-is-ena.patch
+
 ApplyPatch x86-Lock-down-IO-port-access-when-module-security-is.patch
+
 ApplyPatch ACPI-Limit-access-to-custom_method.patch
+
 ApplyPatch asus-wmi-Restrict-debugfs-interface-when-module-load.patch
+
 ApplyPatch Restrict-dev-mem-and-dev-kmem-when-module-loading-is.patch
+
 ApplyPatch acpi-Ignore-acpi_rsdp-kernel-parameter-when-module-l.patch
+
 ApplyPatch kexec-Disable-at-runtime-if-the-kernel-enforces-modu.patch
+
 ApplyPatch x86-Restrict-MSR-access-when-module-loading-is-restr.patch
+
 ApplyPatch Add-option-to-automatically-enforce-module-signature.patch
+
 ApplyPatch efi-Disable-secure-boot-if-shim-is-in-insecure-mode.patch
+
 ApplyPatch efi-Make-EFI_SECURE_BOOT_SIG_ENFORCE-depend-on-EFI.patch
+
 ApplyPatch efi-Add-EFI_SECURE_BOOT-bit.patch
+
 ApplyPatch hibernate-Disable-in-a-signed-modules-environment.patch
 
 ApplyPatch Add-EFI-signature-data-types.patch
+
 ApplyPatch Add-an-EFI-signature-blob-parser-and-key-loader.patch
+
 ApplyPatch KEYS-Add-a-system-blacklist-keyring.patch
+
 ApplyPatch MODSIGN-Import-certificates-from-UEFI-Secure-Boot.patch
+
 ApplyPatch MODSIGN-Support-not-importing-certs-from-db.patch
 
 ApplyPatch Add-sysrq-option-to-disable-secure-boot-mode.patch
 
-ApplyPatch efi-Add-esrt-support.patch
-
-# Assorted Virt Fixes
-
-# DRM core
-
-# Nouveau DRM
-
-# Intel DRM
 ApplyPatch drm-i915-hush-check-crtc-state.patch
 
-# Radeon DRM
-
-# Patches headed upstream
 ApplyPatch disable-i8042-check-on-apple-mac.patch
 
 ApplyPatch lis3-improve-handling-of-null-rate.patch
 
-# Disable watchdog on virtual machines.
 ApplyPatch watchdog-Disable-watchdog-on-virtual-machines.patch
 
-#rhbz 754518
 ApplyPatch scsi-sd_revalidate_disk-prevent-NULL-ptr-deref.patch
 
-# https://fedoraproject.org/wiki/Features/Checkpoint_Restore
 ApplyPatch criu-no-expert.patch
 
-#rhbz 892811
 ApplyPatch ath9k-rx-dma-stop-check.patch
 
-#CVE-2015-2150 rhbz 1196266 1200397
 ApplyPatch xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 
-#rhbz 1212230
 ApplyPatch Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 
-#rhbz 1210857
-ApplyPatch blk-loop-avoid-too-many-pending-per-work-IO.patch
-
-#rhbz 1220118
-ApplyPatch media-Fix-regression-in-some-more-dib0700-based-devi.patch
-
-ApplyPatch v4l-uvcvideo-Fix-incorrect-bandwidth-with-Chicony-de.patch
-
-#rhbz 1217249
-ApplyPatch acpi_video-Add-enable_native_backlight-quirk-for-Mac.patch
-
-#rhbz 1225563
-ApplyPatch HID-lenovo-set-INPUT_PROP_POINTING_STICK.patch
-
-#rhbz 1133378
 ApplyPatch firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 
-#rhbz 1226743
 ApplyPatch drm-i915-turn-off-wc-mmaps.patch
 
-# CVE-2015-XXXX rhbz 1230770 1230774
-ApplyPatch kvm-x86-fix-kvm_apic_has_events-to-check-for-NULL-po.patch
-
-#rhbz 1227891
-ApplyPatch HID-rmi-Disable-populating-F30-when-the-touchpad-has.patch
 
 #Surface Pro 3
 ApplyPatch typecover3-multitouch.patch
@@ -2235,6 +2143,17 @@ fi
 #
 # 
 %changelog
+* Mon Jun 29 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git2.1
+- Linux v4.1-11235-gc63f887bdae8
+- Reenable debugging options.
+
+
+* Fri Jun 26 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Reorganisation and cleanup of the powerpc configs
+
+* Thu Jun 25 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Linux v4.1-5596-gaefbef10e3ae
+
 * Mon Jun 22 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-1
 - Linux v4.1
 
