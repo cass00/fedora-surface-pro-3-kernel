@@ -66,9 +66,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 0
+%define rcrev 2
 # The git snapshot level
-%define gitrev 2
+%define gitrev 0
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -123,7 +123,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 0
+%define debugbuildsenabled 1
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -238,7 +238,6 @@ Summary: The Linux kernel
 %ifnarch %{power64}
 %define with_bootwrapper 0
 %define with_sparse 0
-%define with_perf 0
 %endif
 
 # Per-arch tweaks
@@ -367,7 +366,7 @@ Requires: kernel-modules-uname-r = %{KVERREL}%{?variant}
 #
 # List the packages used during the kernel build
 #
-BuildRequires: kmod, patch, bash, sh-utils, tar
+BuildRequires: kmod, patch, bash, sh-utils, tar, git
 BuildRequires: bzip2, xz, findutils, gzip, m4, perl, perl-Carp, make, diffutils, gawk
 BuildRequires: gcc, binutils, redhat-rpm-config, hmaccalc
 BuildRequires: net-tools, hostname, bc
@@ -463,7 +462,7 @@ Source2001: cpupower.config
 %if 0%{?stable_update}
 %if 0%{?stable_base}
 %define    stable_patch_00  patch-4.%{base_sublevel}.%{stable_base}.xz
-Patch00: %{stable_patch_00}
+Source5000: %{stable_patch_00}
 %endif
 
 # non-released_kernel case
@@ -471,20 +470,20 @@ Patch00: %{stable_patch_00}
 # near the top of this spec file.
 %else
 %if 0%{?rcrev}
-Patch00: patch-4.%{upstream_sublevel}-rc%{rcrev}.xz
+Source5000: patch-4.%{upstream_sublevel}-rc%{rcrev}.xz
 %if 0%{?gitrev}
-Patch01: patch-4.%{upstream_sublevel}-rc%{rcrev}-git%{gitrev}.xz
+Source5001: patch-4.%{upstream_sublevel}-rc%{rcrev}-git%{gitrev}.xz
 %endif
 %else
 # pre-{base_sublevel+1}-rc1 case
 %if 0%{?gitrev}
-Patch00: patch-4.%{base_sublevel}-git%{gitrev}.xz
+Source5000: patch-4.%{base_sublevel}-git%{gitrev}.xz
 %endif
 %endif
 %endif
 
 # build tweak for build ID magic, even for -vanilla
-Patch05: kbuild-AFTER_LINK.patch
+Source5005: kbuild-AFTER_LINK.patch
 
 %if !%{nopatches}
 
@@ -597,6 +596,162 @@ Patch501: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 Patch502: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 
 Patch503: drm-i915-turn-off-wc-mmaps.patch
+
+Patch504: kdbus-add-documentation.patch
+
+Patch505: kdbus-add-uapi-header-file.patch
+
+Patch506: kdbus-add-driver-skeleton-ioctl-entry-points-and-uti.patch
+
+Patch507: kdbus-add-connection-pool-implementation.patch
+
+Patch508: kdbus-add-connection-queue-handling-and-message-vali.patch
+
+Patch509: kdbus-add-node-and-filesystem-implementation.patch
+
+Patch510: kdbus-add-code-to-gather-metadata.patch
+
+Patch511: kdbus-add-code-for-notifications-and-matches.patch
+
+Patch512: kdbus-add-code-for-buses-domains-and-endpoints.patch
+
+Patch513: kdbus-add-name-registry-implementation.patch
+
+Patch514: kdbus-add-policy-database-implementation.patch
+
+Patch515: kdbus-add-Makefile-Kconfig-and-MAINTAINERS-entry.patch
+
+Patch516: kdbus-add-walk-through-user-space-example.patch
+
+Patch517: kdbus-add-selftests.patch
+
+Patch518: Documentation-kdbus-fix-location-for-generated-files.patch
+
+Patch519: kdbus-samples-kdbus-add-lrt.patch
+
+Patch520: kdbus-fix-minor-typo-in-the-walk-through-example.patch
+
+Patch521: samples-kdbus-drop-wrong-include.patch
+
+Patch522: Documentation-kdbus-fix-out-of-tree-builds.patch
+
+Patch523: Documentation-kdbus-support-quiet-builds.patch
+
+Patch524: selftests-kdbus-fix-gitignore.patch
+
+Patch525: Documentation-kdbus-replace-reply_cookie-with-cookie.patch
+
+Patch526: kdbus-fix-header-guard-name.patch
+
+Patch527: kdbus-connection-fix-handling-of-failed-fget.patch
+
+Patch528: kdbus-Fix-CONFIG_KDBUS-help-text.patch
+
+Patch529: samples-kdbus-build-kdbus-workers-conditionally.patch
+
+Patch530: selftest-kdbus-enable-cross-compilation.patch
+
+Patch531: kdbus-uapi-Fix-kernel-doc-for-enum-kdbus_send_flags.patch
+
+Patch532: Documentation-kdbus-Fix-list-of-KDBUS_CMD_ENDPOINT_U.patch
+
+Patch533: Documentation-kdbus-Update-list-of-ioctls-which-caus.patch
+
+Patch534: Documentation-kdbus-Fix-description-of-KDBUS_SEND_SY.patch
+
+Patch535: Documentation-kdbus-Fix-typos.patch
+
+Patch536: kdbus-avoid-the-use-of-struct-timespec.patch
+
+Patch537: kdbus-pool-use-__vfs_read.patch
+
+Patch538: kdbus-skip-mandatory-items-on-negotiation.patch
+
+Patch539: kdbus-turn-kdbus_node_idr-into-an-ida.patch
+
+Patch540: kdbus-reduce-scope-of-handle-locking.patch
+
+Patch541: kdbus-skip-acquiring-an-active-reference-in-poll.patch
+
+Patch542: kdbus-remove-unused-linux-version.h-include.patch
+
+Patch543: kdbus-optimize-auxgroup-collector.patch
+
+Patch544: kdbus-drop-obsolete-WARN_ON.patch
+
+Patch545: kdbus-copy-small-ioctl-payloads-to-stack.patch
+
+Patch546: kdbus-drop-kdbus_meta_attach_mask-modparam.patch
+
+Patch547: kdbus-fix-typo.patch
+
+Patch548: kdbus-forward-ID-notifications-to-everyone.patch
+
+Patch549: kdbus-provide-helper-to-collect-metadata.patch
+
+Patch550: kdbus-make-metadata-on-broadcasts-reliable.patch
+
+Patch551: samples-kdbus-stub-out-code-for-glibc-2.7.patch
+
+Patch552: kdbus-fix-up-documentation-of-ioctl-handlers.patch
+
+Patch553: kdbus-translate-capabilities-between-namespaces.patch
+
+Patch554: kdbus-selftests-add-build-dependencies-on-headers.patch
+
+Patch555: kdbus-use-rcu-to-access-exe-file-in-metadata.patch
+
+Patch556: kdbus-no-need-to-ref-current-mm.patch
+
+Patch557: selftests-kdbus-install-kdbus-test.patch
+
+Patch558: kdbus-update-kernel-doc-for-kdbus_sync_reply_wakeup.patch
+
+Patch559: kdbus-remove-redundant-code-from-kdbus_conn_entry_ma.patch
+
+Patch560: kdbus-kdbus_item_validate-remove-duplicated-code.patch
+
+Patch561: kdbus-kdbus_conn_connect-use-bus-instead-of-conn-ep-.patch
+
+Patch562: kdbus-use-FIELD_SIZEOF-in-kdbus_member_set_user-macr.patch
+
+Patch563: selftests-kdbus-handle-cap_get_proc-error-properly.patch
+
+Patch564: selftests-kdbus-drop-useless-assignment.patch
+
+Patch565: selftests-kdbus-remove-useless-initializations-from-.patch
+
+Patch566: selftests-kdbus-drop-duplicated-code-from-__kdbus_ms.patch
+
+Patch567: selftests-kdbus-fix-error-paths-in-__kdbus_msg_send.patch
+
+Patch568: kdbus-drop-useless-goto.patch
+
+Patch569: kdbus-fix-operator-precedence-issues-in-item-macros.patch
+
+Patch570: kdbus-use-parentheses-uniformly-in-KDBUS_ITEMS_FOREA.patch
+
+Patch571: Documentation-kdbus-fix-operator-precedence-issue-in.patch
+
+Patch572: Documentation-kdbus-use-parentheses-uniformly-in-KDB.patch
+
+Patch573: selftests-kdbus-fix-trivial-style-issues.patch
+
+Patch574: selftests-kdbus-fix-precedence-issues-in-macros.patch
+
+Patch575: selftests-kdbus-use-parentheses-in-iteration-macros-.patch
+
+Patch576: samples-kdbus-add-whitespace.patch
+
+Patch577: samples-kdbus-fix-operator-precedence-issue-in-KDBUS.patch
+
+Patch578: samples-kdbus-use-parentheses-uniformly-in-KDBUS_FOR.patch
+
+Patch579: kdbus-kdbus_reply_find-return-on-found-entry.patch
+
+Patch580: kdbus-optimize-error-path-in-kdbus_reply_new.patch
+
+Patch581: kdbus-optimize-if-statements-in-kdbus_conn_disconnec.patch
 
 
 #Surface Pro 3
@@ -1104,16 +1259,22 @@ if [ ! -d kernel-%{kversion}%{?dist}/vanilla-%{vanillaversion} ]; then
 # Update vanilla to the latest upstream.
 # (non-released_kernel case only)
 %if 0%{?rcrev}
-    ApplyPatch patch-4.%{upstream_sublevel}-rc%{rcrev}.xz
+    xzcat %{SOURCE5000} | patch -p1 -F1 -s
 %if 0%{?gitrev}
-    ApplyPatch patch-4.%{upstream_sublevel}-rc%{rcrev}-git%{gitrev}.xz
+    xzcat %{SOURCE5001} | patch -p1 -F1 -s
 %endif
 %else
 # pre-{base_sublevel+1}-rc1 case
 %if 0%{?gitrev}
-    ApplyPatch patch-4.%{base_sublevel}-git%{gitrev}.xz
+    xzcat %{SOURCE5000} | patch -p1 -F1 -s
 %endif
 %endif
+    git init
+    git config user.email "kernel-team@fedoraproject.org"
+    git config user.name "Fedora Kernel Team"
+    git config gc.auto 0
+    git add .
+    git commit -a -q -m "baseline"
 
     cd ..
 
@@ -1135,7 +1296,9 @@ cd linux-%{KVERREL}
 
 # released_kernel with possible stable updates
 %if 0%{?stable_base}
-ApplyPatch %{stable_patch_00}
+# This is special because the kernel spec is hell and nothing is consistent
+xzcat %{SOURCE5000} | patch -p1 -F1 -s
+git commit -a -m "Stable update"
 %endif
 
 # Drop some necessary files from the source dir into the buildroot
@@ -1163,116 +1326,13 @@ do
 done
 %endif
 
-ApplyPatch kbuild-AFTER_LINK.patch
+# The kbuild-AFTER_LINK patch is needed regardless so we list it as a Source
+# file and apply it separately from the rest.
+git am %{SOURCE5005}
 
 %if !%{nopatches}
 
-ApplyPatch lib-cpumask-Make-CPUMASK_OFFSTACK-usable-without-deb.patch
-
-ApplyPatch amd-xgbe-a0-Add-support-for-XGBE-on-A0.patch
-
-ApplyPatch amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
-
-ApplyPatch arm64-avoid-needing-console-to-enable-serial-console.patch
-
-ApplyPatch usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
-
-ApplyPatch arm64-acpi-drop-expert-patch.patch
-
-ApplyPatch ARM-tegra-usb-no-reset.patch
-
-ApplyPatch arm-dts-am335x-boneblack-lcdc-add-panel-info.patch
-
-ApplyPatch arm-dts-am335x-boneblack-add-cpu0-opp-points.patch
-
-ApplyPatch arm-dts-am335x-bone-common-setup-default-pinmux-http.patch
-
-ApplyPatch arm-dts-am335x-bone-common-add-uart2_pins-uart4_pins.patch
-
-ApplyPatch pinctrl-pinctrl-single-must-be-initialized-early.patch
-
-ApplyPatch arm-i.MX6-Utilite-device-dtb.patch
-
-ApplyPatch arm-highbank-l2-reverts.patch
-
-ApplyPatch Revert-Revert-ACPI-video-change-acpi-video-brightnes.patch
-
-ApplyPatch input-kill-stupid-messages.patch
-
-ApplyPatch die-floppy-die.patch
-
-ApplyPatch no-pcspkr-modalias.patch
-
-ApplyPatch input-silence-i8042-noise.patch
-
-ApplyPatch silence-fbcon-logo.patch
-
-ApplyPatch Kbuild-Add-an-option-to-enable-GCC-VTA.patch
-
-ApplyPatch crash-driver.patch
-
-ApplyPatch Add-secure_modules-call.patch
-
-ApplyPatch PCI-Lock-down-BAR-access-when-module-security-is-ena.patch
-
-ApplyPatch x86-Lock-down-IO-port-access-when-module-security-is.patch
-
-ApplyPatch ACPI-Limit-access-to-custom_method.patch
-
-ApplyPatch asus-wmi-Restrict-debugfs-interface-when-module-load.patch
-
-ApplyPatch Restrict-dev-mem-and-dev-kmem-when-module-loading-is.patch
-
-ApplyPatch acpi-Ignore-acpi_rsdp-kernel-parameter-when-module-l.patch
-
-ApplyPatch kexec-Disable-at-runtime-if-the-kernel-enforces-modu.patch
-
-ApplyPatch x86-Restrict-MSR-access-when-module-loading-is-restr.patch
-
-ApplyPatch Add-option-to-automatically-enforce-module-signature.patch
-
-ApplyPatch efi-Disable-secure-boot-if-shim-is-in-insecure-mode.patch
-
-ApplyPatch efi-Make-EFI_SECURE_BOOT_SIG_ENFORCE-depend-on-EFI.patch
-
-ApplyPatch efi-Add-EFI_SECURE_BOOT-bit.patch
-
-ApplyPatch hibernate-Disable-in-a-signed-modules-environment.patch
-
-ApplyPatch Add-EFI-signature-data-types.patch
-
-ApplyPatch Add-an-EFI-signature-blob-parser-and-key-loader.patch
-
-ApplyPatch KEYS-Add-a-system-blacklist-keyring.patch
-
-ApplyPatch MODSIGN-Import-certificates-from-UEFI-Secure-Boot.patch
-
-ApplyPatch MODSIGN-Support-not-importing-certs-from-db.patch
-
-ApplyPatch Add-sysrq-option-to-disable-secure-boot-mode.patch
-
-ApplyPatch drm-i915-hush-check-crtc-state.patch
-
-ApplyPatch disable-i8042-check-on-apple-mac.patch
-
-ApplyPatch lis3-improve-handling-of-null-rate.patch
-
-ApplyPatch watchdog-Disable-watchdog-on-virtual-machines.patch
-
-ApplyPatch scsi-sd_revalidate_disk-prevent-NULL-ptr-deref.patch
-
-ApplyPatch criu-no-expert.patch
-
-ApplyPatch ath9k-rx-dma-stop-check.patch
-
-ApplyPatch xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
-
-ApplyPatch Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
-
-ApplyPatch firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
-
-ApplyPatch drm-i915-turn-off-wc-mmaps.patch
-
+git am %{patches}
 
 #Surface Pro 3
 ApplyPatch typecover3-multitouch.patch
@@ -1689,12 +1749,8 @@ BuildKernel %make_target %kernel_image %{pae}
 BuildKernel %make_target %kernel_image
 %endif
 
-%ifarch ppc64le
-%define no32bit NO_PERF_READ_VDSO32=1
-%endif
-
 %global perf_make \
-  make -s %{?cross_opts} %{?_smp_mflags} -C tools/perf V=1 %{?no32bit} WERROR=0 NO_LIBUNWIND=1 HAVE_CPLUS_DEMANGLE=1 NO_GTK2=1 NO_STRLCPY=1 NO_BIONIC=1 prefix=%{_prefix}
+  make -s EXTRA_CFLAGS="${RPM_OPT_FLAGS}" LDFLAGS="%{__global_ldflags}" %{?cross_opts} %{?_smp_mflags} -C tools/perf V=1 NO_PERF_READ_VDSO32=1 WERROR=0 NO_LIBUNWIND=1 HAVE_CPLUS_DEMANGLE=1 NO_GTK2=1 NO_STRLCPY=1 NO_BIONIC=1 prefix=%{_prefix}
 %if %{with_perf}
 # perf
 %{perf_make} DESTDIR=$RPM_BUILD_ROOT all
@@ -2143,10 +2199,51 @@ fi
 #
 # 
 %changelog
+* Mon Jul 13 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc2.git0.1
+- Linux v4.2-rc2
+- Disable debugging options.
+
+* Fri Jul 10 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc1.git3.1
+- Linux v4.2-rc1-62-gc4b5fd3fb205
+- Build perf with NO_PERF_READ_VDSO32 on all arches
+
+* Thu Jul 09 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Use git to apply patches
+
+* Wed Jul 08 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc1.git2.1
+- Linux v4.2-rc1-33-gd6ac4ffc61ac
+
+* Tue Jul 07 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Add kdbus
+
+* Tue Jul 07 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc1.git1.1
+- Linux v4.2-rc1-17-gc7e9ad7da219
+- Reenable debugging options.
+
+* Mon Jul 06 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc1.git0.1
+- Linux v4.2-rc1
+- Disable debug options.
+- Add patch to fix perf build
+
+* Thu Jul  2 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Move aarch64 relevant AMBA config options to arm-generic
+- Minor ARMv7 updates
+
+* Wed Jul 01 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc0.git4.1
+- Linux v4.1-11549-g05a8256c586a
+
+* Tue Jun 30 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc0.git3.1
+- Linux v4.1-11355-g6aaf0da8728c
+- Add patch to fix KVM sleeping in atomic issue (rhbz 1237143)
+- Fix errant with_perf disable that removed perf entirely (rhbz 1237266)
+
+* Tue Jun 30 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Minor Aarch64 updates and cleanups
+- Enable initial support for hi6220
+
 * Mon Jun 29 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.0-0.rc0.git2.1
 - Linux v4.1-11235-gc63f887bdae8
 - Reenable debugging options.
-
 
 * Fri Jun 26 2015 Peter Robinson <pbrobinson@fedoraproject.org>
 - Reorganisation and cleanup of the powerpc configs
