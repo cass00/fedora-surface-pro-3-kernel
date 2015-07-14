@@ -1,14 +1,12 @@
-From 21337d43ac1759d46108f23298f2d9d7069cc9dc Mon Sep 17 00:00:00 2001
-From: Chen Yu <yu.c.chen@intel.com>
-Date: Sun, 8 Mar 2015 12:52:12 +0800
-Subject: [PATCH] surface pro: add support for button handling
+From 3a2d46aca4a4f738bf2d34ecac1458967e6d7ca7 Mon Sep 17 00:00:00 2001
+From: Donavan Lance <tusklahoma@gmail.com>
+Date: Mon, 13 Jul 2015 23:57:27 -0400
+Subject: [PATCH] Add Microsoft Surface Pro 3 hardware button support
 
-Power button, Home button, Volume button in surface pro are supposed to be
-included in drivers/input/misc/soc_button_array.c which is implemented
-according to "Windows ACPI Design Guide for SoC Platforms".However surface pro
-does not follow these rules in specs, thus we use MSHW0028 to notify the buttons.
+Updated patch for 4.2-rc2. Originally written by Chen Yu <yu.c.chen@intel.com>.
+Changed only so it applies to kernel 4.2-rc2. Reference: kernel bugzilla #84651
 
-Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+Signed-off-by: Donavan Lance <tusklahoma@gmail.com>
 ---
  drivers/platform/x86/Kconfig          |   7 ++
  drivers/platform/x86/Makefile         |   1 +
@@ -17,29 +15,29 @@ Signed-off-by: Chen Yu <yu.c.chen@intel.com>
  create mode 100644 drivers/platform/x86/surface_button.c
 
 diff --git a/drivers/platform/x86/Kconfig b/drivers/platform/x86/Kconfig
-index 9752761..0205201 100644
+index 6dc13e4..9ba08b0 100644
 --- a/drivers/platform/x86/Kconfig
 +++ b/drivers/platform/x86/Kconfig
-@@ -884,4 +884,11 @@ config PVPANIC
- 	  a paravirtualized device provided by QEMU; it lets a virtual machine
- 	  (guest) communicate panic events to the host.
+@@ -919,4 +919,11 @@ config INTEL_PMC_IPC
+ 	The PMC is an ARC processor which defines IPC commands for communication
+ 	with other entities in the CPU.
  
 +config SURFACE_BUTTON
-+	tristate "Surface Pro Button Driver"
-+	depends on ACPI
-+	---help---
-+	  This driver provides button support for the surface pro tablet, including
-+	  Power Button, Home Button, Volume Button.
++       tristate "Surface Pro Button Driver"
++       depends on ACPI
++       ---help---
++         This driver provides button support for the surface pro tablet, including
++         Power Button, Home Button, Volume Button.
 +
  endif # X86_PLATFORM_DEVICES
 diff --git a/drivers/platform/x86/Makefile b/drivers/platform/x86/Makefile
-index f82232b..ef87d7a 100644
+index dda95a9..4b6698a 100644
 --- a/drivers/platform/x86/Makefile
 +++ b/drivers/platform/x86/Makefile
-@@ -58,3 +58,4 @@ obj-$(CONFIG_INTEL_SMARTCONNECT)	+= intel-smartconnect.o
- 
+@@ -60,3 +60,4 @@ obj-$(CONFIG_INTEL_SMARTCONNECT)	+= intel-smartconnect.o
  obj-$(CONFIG_PVPANIC)           += pvpanic.o
  obj-$(CONFIG_ALIENWARE_WMI)	+= alienware-wmi.o
+ obj-$(CONFIG_INTEL_PMC_IPC)	+= intel_pmc_ipc.o
 +obj-$(CONFIG_SURFACE_BUTTON)	+= surface_button.o
 diff --git a/drivers/platform/x86/surface_button.c b/drivers/platform/x86/surface_button.c
 new file mode 100644
@@ -272,5 +270,5 @@ index 0000000..19582da
 +
 +module_acpi_driver(surface_button_driver);
 -- 
-1.9.3
+2.4.3
 

@@ -755,9 +755,9 @@ Patch581: kdbus-optimize-if-statements-in-kdbus_conn_disconnec.patch
 
 
 #Surface Pro 3
-Patch9997: typecover3-multitouch.patch
-Patch9998: surface-pro-3-cameras.patch
-Patch9999: surface-pro-3-buttons.patch
+Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+Patch9998: Add-Microsoft-Surface-Pro-3-camera-support.patch
+Patch9999: Add-Microsoft-Surface-Pro-3-hardware-button-support.patch
 
 # END OF PATCH DEFINITIONS
 
@@ -1270,8 +1270,8 @@ if [ ! -d kernel-%{kversion}%{?dist}/vanilla-%{vanillaversion} ]; then
 %endif
 %endif
     git init
-    git config user.email "kernel-team@fedoraproject.org"
-    git config user.name "Fedora Kernel Team"
+    git config user.email "tusklahoma@gmail.com"
+    git config user.name "Donavan Lance"
     git config gc.auto 0
     git add .
     git commit -a -q -m "baseline"
@@ -1333,11 +1333,6 @@ git am %{SOURCE5005}
 %if !%{nopatches}
 
 git am %{patches}
-
-#Surface Pro 3
-ApplyPatch typecover3-multitouch.patch
-ApplyPatch surface-pro-3-cameras.patch
-ApplyPatch surface-pro-3-buttons.patch
 
 # END OF PATCH APPLICATIONS
 
