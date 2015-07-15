@@ -757,7 +757,7 @@ Patch581: kdbus-optimize-if-statements-in-kdbus_conn_disconnec.patch
 #Surface Pro 3
 Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
 Patch9998: Add-Microsoft-Surface-Pro-3-camera-support.patch
-Patch9999: Add-Microsoft-Surface-Pro-3-hardware-button-support.patch
+Patch9999: Add-support-driver-for-Surface-Pro-3-buttons.patch
 
 # END OF PATCH DEFINITIONS
 
