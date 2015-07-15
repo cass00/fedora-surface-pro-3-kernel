@@ -1,5 +1,5 @@
 From: Chen Yu <yu.c.chen@intel.com>
-Subject: [PATCH] surface pro: add support for button handling
+Subject: [RFC PATCH] Add support driver for Surface Pro 3 buttons
 
 Tested-by: Ethan Schoonover <es@ethanschoonover.com>
 Tested-by: Peter Amidon <psa.pub.0@picnicpark.org>
