@@ -1,6 +1,6 @@
-From 59491261e8feac10e8a553efce59d8fae78eac2e Mon Sep 17 00:00:00 2001
+From b9798a8d537199e63ee0460fb063214278896913 Mon Sep 17 00:00:00 2001
 From: Donavan Lance <tusklahoma@gmail.com>
-Date: Mon, 13 Jul 2015 19:35:10 -0400
+Date: Wed, 15 Jul 2015 22:56:31 -0400
 Subject: [PATCH] Add multitouch support for Microsoft Type Cover 3
 
 Original patch from user felipeota on GitHub. Extended by user hkoba on GitHub
@@ -10,32 +10,29 @@ Adds additional Type Cover IDs.
 
 Signed-off-by: Donavan Lance <tusklahoma@gmail.com>
 ---
- drivers/hid/hid-core.c          |  9 ---------
+ drivers/hid/hid-core.c          |  6 +-----
  drivers/hid/hid-ids.h           |  2 ++
  drivers/hid/hid-microsoft.c     |  4 ----
  drivers/hid/hid-multitouch.c    | 14 ++++++++++++++
  drivers/hid/usbhid/hid-quirks.c |  2 ++
- 5 files changed, 18 insertions(+), 13 deletions(-)
+ 5 files changed, 19 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/hid/hid-core.c b/drivers/hid/hid-core.c
-index 157c627..dedeebf 100644
+index 157c627..83332fc 100644
 --- a/drivers/hid/hid-core.c
 +++ b/drivers/hid/hid-core.c
-@@ -704,13 +704,6 @@ static void hid_scan_collection(struct hid_parser *parser, unsigned type)
- 	    type == HID_COLLECTION_PHYSICAL)
+@@ -705,9 +705,7 @@ static void hid_scan_collection(struct hid_parser *parser, unsigned type)
  		hid->group = HID_GROUP_SENSOR_HUB;
  
--	if (hid->vendor == USB_VENDOR_ID_MICROSOFT &&
+ 	if (hid->vendor == USB_VENDOR_ID_MICROSOFT &&
 -	    (hid->product == USB_DEVICE_ID_MS_TYPE_COVER_3 ||
 -	     hid->product == USB_DEVICE_ID_MS_TYPE_COVER_3_JP ||
 -	     hid->product == USB_DEVICE_ID_MS_POWER_COVER) &&
--	    hid->group == HID_GROUP_MULTITOUCH)
--		hid->group = HID_GROUP_GENERIC;
--
- 	if ((parser->global.usage_page << 16) == HID_UP_GENDESK)
- 		for (i = 0; i < parser->local.usage_index; i++)
- 			if (parser->local.usage[i] == HID_GD_POINTER)
-@@ -1902,8 +1895,6 @@ static const struct hid_device_id hid_have_special_driver[] = {
++	    hid->product == USB_DEVICE_ID_MS_POWER_COVER &&
+ 	    hid->group == HID_GROUP_MULTITOUCH)
+ 		hid->group = HID_GROUP_GENERIC;
+ 
+@@ -1902,8 +1900,6 @@ static const struct hid_device_id hid_have_special_driver[] = {
  	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_DIGITAL_MEDIA_3K) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_WIRELESS_OPTICAL_DESKTOP_3_0) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_OFFICE_KB) },
