@@ -41,7 +41,7 @@ Summary: The Linux kernel
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
 
-%global baserelease 999
+%global baserelease 990
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -2039,6 +2039,9 @@ fi
 #
 # 
 %changelog
+* Thu Jul 16 2015 Donavan Lance <tusklahoma@gmail.com> - 4.2.0-0.rc2.git1.990.surfacepro3
+- Linux v4.2-rc2-77-gf760b87f8f12-990.surfacepro3
+
 * Wed Jul 15 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc2.git1.1
 - Linux v4.2-rc2-77-gf760b87f8f12
 
