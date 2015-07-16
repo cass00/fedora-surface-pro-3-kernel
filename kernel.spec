@@ -22,7 +22,7 @@ Summary: The Linux kernel
 %global zipsed -e 's/\.ko$/\.ko.xz/'
 %endif
 
-# % define buildid .local
+%define buildid .surfacepro3
 
 # baserelease defines which build revision of this kernel version we're
 # building.  We used to call this fedora_build, but the magical name
@@ -40,7 +40,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 200
+%global baserelease 990
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -624,6 +624,11 @@ Patch26231: kvm-x86-fix-kvm_apic_has_events-to-check-for-NULL-po.patch
 
 # rhbz 1227891
 Patch26250: HID-rmi-Disable-populating-F30-when-the-touchpad-has.patch
+
+# Surface Pro 3
+Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
+Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+Patch9999: Add-support-driver-for-Surface-Pro-3-buttons.patch
 
 # END OF PATCH DEFINITIONS
 
@@ -1367,6 +1372,11 @@ ApplyPatch kvm-x86-fix-kvm_apic_has_events-to-check-for-NULL-po.patch
 
 #rhbz 1227891
 ApplyPatch HID-rmi-Disable-populating-F30-when-the-touchpad-has.patch
+
+# Surface Pro 3
+ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
+ApplyPatch Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+ApplyPatch Add-support-driver-for-Surface-Pro-3-buttons.patch
 
 # END OF PATCH APPLICATIONS
 
@@ -2218,6 +2228,9 @@ fi
 #
 # 
 %changelog
+* Thu Jul 16 2015 Donavan Lance <tusklahoma@gmail.com> - 4.1.2-990.surfacepro3
+- Add Surface Pro 3 patchset
+
 * Wed Jul 15 2015 Laura Abbott <labbott@fedoraproject.org> - 4.1.2-200
 - Linux v4.1.2 rebase
 
