@@ -3,7 +3,6 @@ From: Donavan Lance <tusklahoma@gmail.com>
 Date: Mon, 13 Jul 2015 22:49:51 -0400
 Subject: [PATCH] Add Microsoft Surface Pro 3 camera support
 
-Signed-off-by: Donavan Lance <tusklahoma@gmail.com>
 ---
  drivers/media/usb/uvc/uvc_driver.c | 16 ++++++++++++++++
  1 file changed, 16 insertions(+)
