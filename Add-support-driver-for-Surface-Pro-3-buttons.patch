@@ -20,7 +20,7 @@ Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=84651
 Tested-by: Ethan Schoonover <es@ethanschoonover.com>
 Tested-by: Peter Amidon <psa.pub.0@picnicpark.org>
 Reviewed-by: Zhang Rui <rui.zhang@intel.com>
-Contributed-by: Donavan Lance <tusklahoma@gmail.co>
+Contributed-by: Donavan Lance <tusklahoma@gmail.com>
 [Get patch to apply to kernel v4.1.2]
 Signed-off-by: Chen Yu <yu.c.chen@intel.com>
 ---
