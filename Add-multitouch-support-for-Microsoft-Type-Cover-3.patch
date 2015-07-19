@@ -1,14 +1,15 @@
 From 2946353e725c3dc526df25040cbc4829ccd1c3b2 Mon Sep 17 00:00:00 2001
-From: Donavan Lance <tusklahoma@gmail.com>
+From: Felipe Otamendi <https://www.github.com/felipeota>
 Date: Wed, 15 Jul 2015 22:50:50 -0400
 Subject: [PATCH] Add multitouch support for Microsoft Type Cover 3
 
-Original patch from user felipeota on GitHub. Extended by user hkoba on GitHub
-to add support for Japanese Type Cover.
+Originally authored by Felipe Otamendi.
+Support for Japanese Type Cover 3 added by Kobayasi, Hiroaki (hkoba),
+support for new Type Cover 3 IDs added by Donavan Lance.
 
-Adds additional Type Cover IDs.
-
-Signed-off-by: Donavan Lance <tusklahoma@gmail.com>
+Authored-by: Felipe Otamendi <https://www.github.com/felipeota>
+Contributed-by: Kobayasi Hiroaki <hkoba@cpan.org>
+Contributed-by: Donavan Lance <tusklahoma@gmail.com>
 ---
  drivers/hid/hid-core.c          |  6 ++----
  drivers/hid/hid-ids.h           |  3 +++

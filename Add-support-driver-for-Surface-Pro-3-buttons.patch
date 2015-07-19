@@ -1,12 +1,28 @@
-From 9ae363cfa5b3e7e5c3f2219e3b15c968ebe3e2bc Mon Sep 17 00:00:00 2001
-From: Donavan Lance <tusklahoma@gmail.com>
-Date: Wed, 15 Jul 2015 23:08:18 -0400
-Subject: [PATCH] Add support driver for Surface Pro 3 buttons
+From: Chen Yu <yu.c.chen@intel.com>
+Date: Mon 13 July 2015 6:59:12
+Subject: [RFC PATCH] Add support driver for Surface Pro 3 buttons
 
-Patch originally authored by Chen Yu, backported to 4.1.2
+Since Surface Pro 3 does not follow the specs of "Windows ACPI Design
+Guide for SoC Platform", code in drivers/input/misc/soc_array.c can
+not detect these buttons on it. According to bios implementation,
+Surface Pro 3 encapsulates these buttons in a device named "VGBI",
+with _HID "MSHW0028". When any of the buttons is pressed, a specify
+ACPI notification code for this button will be delivered to "VGBI". For
+example, if power button is pressed down, ACPI notification code of 0xc6
+will be sent by Notify(VGBI, 0xc6).
+
+This patch leverages "VGBI" to distinguish different ACPI notification
+code from Power button, Home button, Volume button, then dispatches these
+code to input layer. Lid is already covered by acpi button driver, so
+there's no need to rewrite.
+
 Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=84651
-
-Signed-off-by: Donavan Lance <tusklahoma@gmail.com>
+Tested-by: Ethan Schoonover <es@ethanschoonover.com>
+Tested-by: Peter Amidon <psa.pub.0@picnicpark.org>
+Reviewed-by: Zhang Rui <rui.zhang@intel.com>
+Contributed-by: Donavan Lance <tusklahoma@gmail.co>
+[Get patch to apply to kernel v4.1.2]
+Signed-off-by: Chen Yu <yu.c.chen@intel.com>
 ---
  drivers/platform/x86/Kconfig              |   6 +
  drivers/platform/x86/surfacepro3_button.c | 203 ++++++++++++++++++++++++++++++
