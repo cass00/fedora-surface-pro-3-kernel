@@ -68,7 +68,7 @@ Summary: The Linux kernel
 # The rc snapshot level
 %define rcrev 2
 # The git snapshot level
-%define gitrev 1
+%define gitrev 2
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -2039,6 +2039,12 @@ fi
 #
 # 
 %changelog
+* Fri Jul 17 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc2.git2.1
+- Linux v4.2-rc2-190-g21bdb584af8c
+
+* Fri Jul 17 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Enable DW MMC for generic ARM (hi6220 SoC support)
+
 * Thu Jul 16 2015 Donavan Lance <tusklahoma@gmail.com> - 4.2.0-0.rc2.git1.990.surfacepro3
 - Linux v4.2-rc2-77-gf760b87f8f12-990.surfacepro3
 
