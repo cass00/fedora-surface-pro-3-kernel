@@ -40,7 +40,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 990
+%global baserelease 991
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -2228,6 +2228,9 @@ fi
 #
 # 
 %changelog
+* Mon Jul 20 2015 Donavan Lance <tusklahoma@gmail.com> - 4.1.2-991.surfacepro3
+- Bump for rebuild
+
 * Thu Jul 16 2015 Donavan Lance <tusklahoma@gmail.com> - 4.1.2-990.surfacepro3
 - Add Surface Pro 3 patchset
 
