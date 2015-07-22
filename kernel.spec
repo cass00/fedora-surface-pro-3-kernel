@@ -68,7 +68,7 @@ Summary: The Linux kernel
 # The rc snapshot level
 %define rcrev 3
 # The git snapshot level
-%define gitrev 0
+%define gitrev 2
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -123,7 +123,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 1
+%define debugbuildsenabled 0
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -505,19 +505,7 @@ Patch456: arm64-acpi-drop-expert-patch.patch
 
 Patch457: ARM-tegra-usb-no-reset.patch
 
-Patch458: arm-dts-am335x-boneblack-lcdc-add-panel-info.patch
-
-Patch459: arm-dts-am335x-boneblack-add-cpu0-opp-points.patch
-
-Patch460: arm-dts-am335x-bone-common-setup-default-pinmux-http.patch
-
-Patch461: arm-dts-am335x-bone-common-add-uart2_pins-uart4_pins.patch
-
-Patch462: pinctrl-pinctrl-single-must-be-initialized-early.patch
-
 Patch463: arm-i.MX6-Utilite-device-dtb.patch
-
-Patch464: arm-highbank-l2-reverts.patch
 
 Patch465: Revert-Revert-ACPI-video-change-acpi-video-brightnes.patch
 
@@ -598,6 +586,9 @@ Patch502: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 Patch503: drm-i915-turn-off-wc-mmaps.patch
 
 Patch504: kdbus.patch
+
+# http://www.spinics.net/lists/netdev/msg336243.html
+Patch505: 0001-stmmac-fix-setting-of-driver-data-in-stmmac_dvr_prob.patch
 
 #Surface Pro 3
 Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -2039,6 +2030,16 @@ fi
 #
 # 
 %changelog
+* Wed Jul 22 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc3.git2.1
+- Linux v4.2-rc3-17-gd725e66c06ab
+
+* Tue Jul 21 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc3.git1.1
+- Linux v4.2-rc3-4-g9d634c410b07
+- Reenable debugging options.
+
+* Tue Jul 21 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Fix stmmac eth driver (AllWinner, other ARM, and other devices)
+
 * Mon Jul 20 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc3.git0.1
 - Linux v4.2-rc3
 
