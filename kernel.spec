@@ -24,7 +24,7 @@ Summary: The Linux kernel
 %global zipsed -e 's/\.ko$/\.ko.xz/'
 %endif
 
-# % define buildid .local
+%define buildid .surfacepro3
 
 # baserelease defines which build revision of this kernel version we're
 # building.  We used to call this fedora_build, but the magical name
@@ -42,7 +42,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 100
+%global baserelease 991
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -636,6 +636,11 @@ Patch26252: ideapad_laptop-Lenovo-G50-30-fix-rfkill-reports-wire.patch
 
 # rhbz 1180920 1206724
 Patch26253: pcmcia-fix-a-boot-time-warning-in-pcmcia-cs-code.patch
+
+# Surface Pro 3
+Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
+Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+Patch9999: Add-support-driver-for-Surface-Pro-3-buttons.patch
 
 # END OF PATCH DEFINITIONS
 
@@ -1379,6 +1384,11 @@ ApplyPatch ideapad_laptop-Lenovo-G50-30-fix-rfkill-reports-wire.patch
 
 # rhbz 1180920 1206724
 ApplyPatch pcmcia-fix-a-boot-time-warning-in-pcmcia-cs-code.patch
+
+# Surface Pro 3
+ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
+ApplyPatch Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+ApplyPatch Add-support-driver-for-Surface-Pro-3-buttons.patch
 
 # END OF PATCH APPLICATIONS
 
@@ -2239,6 +2249,10 @@ fi
 #                                    ||----w |
 #                                    ||     ||
 %changelog
+* Fri Jul 24 2015 Donavan Lance <tusklahoma@gmail.com> - 4.1.3-991.surfacepro3
+- Add Microsoft Surface Pro 3 support
+- Linux v4.1.3 F21 rebase
+
 * Thu Jul 23 2015 Laura Abbott <labbott@fedoraproject.org> - 4.1.3-100
 - Linux v4.1.3 rebase
 - Fix warning from pcmcia (rhbz 1180920 1206724)
