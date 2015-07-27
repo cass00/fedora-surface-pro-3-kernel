@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 3
+%define rcrev 4
 # The git snapshot level
-%define gitrev 4
+%define gitrev 0
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -583,6 +583,8 @@ Patch501: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 Patch502: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 
 Patch503: drm-i915-turn-off-wc-mmaps.patch
+
+Patch504: KEYS-ensure-we-free-the-assoc-array-edit-if-edit-is-.patch
 
 # Surface Pro 3 support
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -2024,6 +2026,10 @@ fi
 #
 # 
 %changelog
+* Mon Jul 27 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc4.git0.1
+- Linux v4.2-rc4
+- CVE-2015-1333 add_key memory leak (rhbz 1244171)
+
 * Fri Jul 24 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc3.git4.1
 - Linux v4.2-rc3-136-g45b4b782e848
 

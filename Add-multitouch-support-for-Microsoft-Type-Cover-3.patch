@@ -1,15 +1,15 @@
-From 88a9051efa5b581a97dc72dcef80fd81208e31f2 Mon Sep 17 00:00:00 2001
-From: Felipe Otamendi <https://www.github.com/felipeota>
-Date: Wed, 15 Jul 2015 22:56:31 -0400
+From 702dcd245035a6f1adefa07d5e7becad7b807480 Mon Sep 17 00:00:00 2001
+From: Donavan Lance <tusklahoma@gmail.com>
+Date: Sun, 26 Jul 2015 17:30:45 -0400
 Subject: [PATCH] Add multitouch support for Microsoft Type Cover 3
 
-Originally authored by Felipe Otamendi.
-Support for Japanese Type Cover 3 added by Kobayasi, Hiroaki (hkoba),
-support for new Type Cover 3 IDs added by Donavan Lance.
-
 Authored-by: Felipe Otamendi <https://www.github.com/felipeota>
-Contributed-by: Kobayasi Hiroaki <hkoba@cpan.org>
-Contributed-by: Donavan Lance <tusklahoma@gmail.com>
+
+[hkoba@cpan.org: Extend patch to support Japanese Type Cover]
+Contributor: Kobayasi Hiroaki <hkoba@cpan.org>
+
+[tusklahoma@gmail.com: Extend patch to support additional Type Cover IDs]
+Maintainer: Donavan Lance <tusklahoma@gmail.com>
 ---
  drivers/hid/hid-core.c          |  6 +-----
  drivers/hid/hid-ids.h           |  2 ++
@@ -71,10 +71,10 @@ index 32a596f..3110927 100644
  		.driver_data = MS_HIDINPUT },
  
 diff --git a/drivers/hid/hid-multitouch.c b/drivers/hid/hid-multitouch.c
-index 6a9b05b..2dc000e 100644
+index 7c81125..dbaddca 100644
 --- a/drivers/hid/hid-multitouch.c
 +++ b/drivers/hid/hid-multitouch.c
-@@ -1259,6 +1259,20 @@ static const struct hid_device_id mt_devices[] = {
+@@ -1266,6 +1266,20 @@ static const struct hid_device_id mt_devices[] = {
  		MT_USB_DEVICE(USB_VENDOR_ID_ILITEK,
  			USB_DEVICE_ID_ILITEK_MULTITOUCH) },
  
@@ -96,11 +96,11 @@ index 6a9b05b..2dc000e 100644
  	{ .driver_data = MT_CLS_CONFIDENCE_MINUS_ONE,
  		MT_USB_DEVICE(USB_VENDOR_ID_ASUS,
 diff --git a/drivers/hid/usbhid/hid-quirks.c b/drivers/hid/usbhid/hid-quirks.c
-index 53e7de7..8455b04 100644
+index 20f9a65..3d7641a 100644
 --- a/drivers/hid/usbhid/hid-quirks.c
 +++ b/drivers/hid/usbhid/hid-quirks.c
-@@ -89,6 +89,8 @@ static const struct hid_blacklist {
- 	{ USB_VENDOR_ID_MGE, USB_DEVICE_ID_MGE_UPS, HID_QUIRK_NOGET },
+@@ -92,6 +92,8 @@ static const struct hid_blacklist {
+ 	{ USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_TOUCH_COVER_2, HID_QUIRK_NO_INIT_REPORTS },
  	{ USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_TYPE_COVER_3, HID_QUIRK_NO_INIT_REPORTS },
  	{ USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_TYPE_COVER_3_JP, HID_QUIRK_NO_INIT_REPORTS },
 +	{ USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_TYPE_COVER_3_1, HID_QUIRK_NO_INIT_REPORTS },
