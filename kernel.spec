@@ -637,6 +637,9 @@ Patch26252: ideapad_laptop-Lenovo-G50-30-fix-rfkill-reports-wire.patch
 # rhbz 1180920 1206724
 Patch26253: pcmcia-fix-a-boot-time-warning-in-pcmcia-cs-code.patch
 
+#CVE-2015-1333 rhbz 1244171
+Patch26254: KEYS-ensure-we-free-the-assoc-array-edit-if-edit-is-.patch
+
 # Surface Pro 3
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -1384,6 +1387,9 @@ ApplyPatch ideapad_laptop-Lenovo-G50-30-fix-rfkill-reports-wire.patch
 
 # rhbz 1180920 1206724
 ApplyPatch pcmcia-fix-a-boot-time-warning-in-pcmcia-cs-code.patch
+
+#CVE-2015-1333 rhbz 1244171
+ApplyPatch KEYS-ensure-we-free-the-assoc-array-edit-if-edit-is-.patch
 
 # Surface Pro 3
 ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -2249,6 +2255,9 @@ fi
 #                                    ||----w |
 #                                    ||     ||
 %changelog
+* Mon Jul 27 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-1333 add_key memory leak (rhbz 1244171)
+
 * Fri Jul 24 2015 Donavan Lance <tusklahoma@gmail.com> - 4.1.3-991.surfacepro3
 - Add Microsoft Surface Pro 3 support
 - Linux v4.1.3 F21 rebase
