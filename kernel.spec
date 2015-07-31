@@ -631,15 +631,13 @@ Patch26251: ideapad_laptop-Lenovo-G50-30-fix-rfkill-reports-wire.patch
 # rhbz 1180920 1206724
 Patch26252: pcmcia-fix-a-boot-time-warning-in-pcmcia-cs-code.patch
 
-<<<<<<< HEAD
+#CVE-2015-1333 rhbz 1244171
+Patch26253: KEYS-ensure-we-free-the-assoc-array-edit-if-edit-is-.patch
+
 # Surface Pro 3
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
 Patch9999: Add-support-driver-for-Surface-Pro-3-buttons.patch
-=======
-#CVE-2015-1333 rhbz 1244171
-Patch26253: KEYS-ensure-we-free-the-assoc-array-edit-if-edit-is-.patch
->>>>>>> 829cdb4122b3d73df3cc1097036a7eea703cbd2b
 
 # END OF PATCH DEFINITIONS
 
