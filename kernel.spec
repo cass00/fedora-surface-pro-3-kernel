@@ -67,7 +67,7 @@ Summary: The Linux kernel
 # The rc snapshot level
 %define rcrev 4
 # The git snapshot level
-%define gitrev 0
+%define gitrev 3
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -505,8 +505,6 @@ Patch456: arm64-acpi-drop-expert-patch.patch
 Patch457: ARM-tegra-usb-no-reset.patch
 
 Patch463: arm-i.MX6-Utilite-device-dtb.patch
-
-Patch465: Revert-Revert-ACPI-video-change-acpi-video-brightnes.patch
 
 Patch466: input-kill-stupid-messages.patch
 
@@ -2026,6 +2024,21 @@ fi
 #
 # 
 %changelog
+* Thu Jul 30 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc4.git3.1
+- Linux v4.2-rc4-87-g86ea07ca846a
+
+* Thu Jul 30 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Disable CRYPTO_DEV_VMX_ENCRYPT on PPC for now to fix Power 8 boot (rhbz 1237089)
+
+* Wed Jul 29 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc4.git2.1
+- Linux v4.2-rc4-53-g956325bd55bb
+
+* Wed Jul 29 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Drop acpi_brightness_enable revert patch
+
+* Tue Jul 28 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc4.git1.1
+- Linux v4.2-rc4-44-g67eb890e5e13
+
 * Mon Jul 27 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc4.git0.1
 - Linux v4.2-rc4
 - CVE-2015-1333 add_key memory leak (rhbz 1244171)
