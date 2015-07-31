@@ -68,7 +68,7 @@ Summary: The Linux kernel
 # The rc snapshot level
 %define rcrev 4
 # The git snapshot level
-%define gitrev 0
+%define gitrev 3
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -123,7 +123,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 1
+%define debugbuildsenabled 0
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -507,8 +507,6 @@ Patch457: ARM-tegra-usb-no-reset.patch
 
 Patch463: arm-i.MX6-Utilite-device-dtb.patch
 
-Patch465: Revert-Revert-ACPI-video-change-acpi-video-brightnes.patch
-
 Patch466: input-kill-stupid-messages.patch
 
 Patch467: die-floppy-die.patch
@@ -584,8 +582,6 @@ Patch501: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 Patch502: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 
 Patch503: drm-i915-turn-off-wc-mmaps.patch
-
-Patch504: KEYS-ensure-we-free-the-assoc-array-edit-if-edit-is-.patch
 
 Patch904: kdbus.patch
 
@@ -2029,6 +2025,22 @@ fi
 #
 # 
 %changelog
+* Thu Jul 30 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc4.git3.1
+- Linux v4.2-rc4-87-g86ea07ca846a
+
+* Thu Jul 30 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Disable CRYPTO_DEV_VMX_ENCRYPT on PPC for now to fix Power 8 boot (rhbz 1237089)
+
+* Wed Jul 29 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc4.git2.1
+- Linux v4.2-rc4-53-g956325bd55bb
+
+* Wed Jul 29 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Drop acpi_brightness_enable revert patch
+
+* Tue Jul 28 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc4.git1.1
+- Linux v4.2-rc4-44-g67eb890e5e13
+- Reenable debugging options.
+
 * Mon Jul 27 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc4.git0.1
 - Linux v4.2-rc4
 - CVE-2015-1333 add_key memory leak (rhbz 1244171)
