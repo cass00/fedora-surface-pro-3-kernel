@@ -582,8 +582,6 @@ Patch502: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 
 Patch503: drm-i915-turn-off-wc-mmaps.patch
 
-Patch504: KEYS-ensure-we-free-the-assoc-array-edit-if-edit-is-.patch
-
 # Surface Pro 3 support
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
