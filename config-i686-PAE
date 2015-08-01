@@ -8,4 +8,4 @@ CONFIG_XEN_SYS_HYPERVISOR=y
 # CONFIG_I2O is not set
 
 # Don't build Surface Pro 3 hardware button support for 32-bit
-# CONFIG_SURFACE_PRO3_BUTTON is not set
+# CONFIG_SURFACE_BUTTON is not set
