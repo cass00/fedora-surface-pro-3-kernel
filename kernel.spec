@@ -40,7 +40,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 992
+%global baserelease 990
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -52,7 +52,7 @@ Summary: The Linux kernel
 %if 0%{?released_kernel}
 
 # Do we have a -stable update to apply?
-%define stable_update 3
+%define stable_update 4
 # Set rpm version accordingly
 %if 0%{?stable_update}
 %define stablerev %{stable_update}
@@ -599,12 +599,6 @@ Patch26175: xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 #rhbz 1212230
 Patch26176: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 
-#rhbz 1210857
-Patch26192: blk-loop-avoid-too-many-pending-per-work-IO.patch
-
-#rhbz 1220118
-Patch26202: media-Fix-regression-in-some-more-dib0700-based-devi.patch
-
 Patch26203: v4l-uvcvideo-Fix-incorrect-bandwidth-with-Chicony-de.patch
 
 #rhbz 1217249
@@ -631,9 +625,6 @@ Patch26251: ideapad_laptop-Lenovo-G50-30-fix-rfkill-reports-wire.patch
 # rhbz 1180920 1206724
 Patch26252: pcmcia-fix-a-boot-time-warning-in-pcmcia-cs-code.patch
 
-#CVE-2015-1333 rhbz 1244171
-Patch26253: KEYS-ensure-we-free-the-assoc-array-edit-if-edit-is-.patch
-
 # CVE-2015-3290 CVE-2015-3291 rhbz 1243465 1245927
 Patch26254: x86-asm-entry-64-Remove-pointless-jump-to-irq_return.patch
 Patch26255: x86-entry-Stop-using-PER_CPU_VAR-kernel_stack.patch
@@ -644,6 +635,9 @@ Patch26259: x86-nmi-64-Switch-stacks-on-userspace-NMI-entry.patch
 Patch26260: x86-nmi-64-Improve-nested-NMI-comments.patch
 Patch26261: x86-nmi-64-Reorder-nested-NMI-checks.patch
 Patch26262: x86-nmi-64-Use-DF-to-avoid-userspace-RSP-confusing-n.patch
+
+# CVE-2015-5697 (rhbz 1249011 1249013)
+Patch26263: md-use-kzalloc-when-bitmap-is-disabled.patch
 
 # Surface Pro 3
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -1362,12 +1356,6 @@ ApplyPatch xen-pciback-Don-t-disable-PCI_COMMAND-on-PCI-device-.patch
 #rhbz 1212230
 ApplyPatch Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 
-#rhbz 1210857
-ApplyPatch blk-loop-avoid-too-many-pending-per-work-IO.patch
-
-#rhbz 1220118
-ApplyPatch media-Fix-regression-in-some-more-dib0700-based-devi.patch
-
 ApplyPatch v4l-uvcvideo-Fix-incorrect-bandwidth-with-Chicony-de.patch
 
 #rhbz 1217249
@@ -1399,9 +1387,6 @@ ApplyPatch ideapad_laptop-Lenovo-G50-30-fix-rfkill-reports-wire.patch
 # rhbz 1180920 1206724
 ApplyPatch pcmcia-fix-a-boot-time-warning-in-pcmcia-cs-code.patch
 
-#CVE-2015-1333 rhbz 1244171
-ApplyPatch KEYS-ensure-we-free-the-assoc-array-edit-if-edit-is-.patch
-
 # CVE-2015-3290 CVE-2015-3291 rhbz 1243465 1245927
 ApplyPatch x86-asm-entry-64-Remove-pointless-jump-to-irq_return.patch
 ApplyPatch x86-entry-Stop-using-PER_CPU_VAR-kernel_stack.patch
@@ -1412,6 +1397,9 @@ ApplyPatch x86-nmi-64-Switch-stacks-on-userspace-NMI-entry.patch
 ApplyPatch x86-nmi-64-Improve-nested-NMI-comments.patch
 ApplyPatch x86-nmi-64-Reorder-nested-NMI-checks.patch
 ApplyPatch x86-nmi-64-Use-DF-to-avoid-userspace-RSP-confusing-n.patch
+
+# CVE-2015-5697 (rhbz 1249011 1249013)
+ApplyPatch md-use-kzalloc-when-bitmap-is-disabled.patch
 
 # Surface Pro 3
 ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -2268,6 +2256,10 @@ fi
 #
 # 
 %changelog
+* Mon Aug 03 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.4-200
+- Linux v4.1.4
+- CVE-2015-5697 info leak in md driver (rhbz 1249011 1249013)
+
 * Wed Jul 29 2015 Laura Abbott <labbott@redhat.com> - 4.1.3-201
 - tag and build for CVE fixes
 
