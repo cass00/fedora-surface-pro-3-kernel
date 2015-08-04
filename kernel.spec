@@ -583,7 +583,10 @@ Patch502: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 
 Patch503: drm-i915-turn-off-wc-mmaps.patch
 
-Patch505: 0001-Revert-dm-fix-casting-bug-in-dm_merge_bvec.patch
+Patch505: 0001-dm-fix-dm_merge_bvec-regression-on-32-bit-systems.patch
+
+# CVE-2015-5697 (rhbz 1249011 1249013)
+Patch506: md-use-kzalloc-when-bitmap-is-disabled.patch
 
 Patch904: kdbus.patch
 
@@ -2027,6 +2030,10 @@ fi
 #
 # 
 %changelog
+* Mon Aug 03 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix i386 boot bug correctly (rhbz 1247382)
+- CVE-2015-5697 info leak in md driver (rhbz 1249011 1249013)
+
 * Mon Aug 03 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc5.git0.1
 - Linux v4.2-rc5
 - Disable debugging options.
