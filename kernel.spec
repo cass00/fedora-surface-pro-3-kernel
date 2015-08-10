@@ -645,6 +645,9 @@ Patch26263: x86-nmi-64-Use-DF-to-avoid-userspace-RSP-confusing-n.patch
 # CVE-2015-5697 (rhbz 1249011 1249013)
 Patch26264: md-use-kzalloc-when-bitmap-is-disabled.patch
 
+#rhbz 1244511
+Patch507: HID-chicony-Add-support-for-Acer-Aspire-Switch-12.patch
+
 # Surface Pro 3
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -1400,6 +1403,9 @@ ApplyPatch x86-nmi-64-Use-DF-to-avoid-userspace-RSP-confusing-n.patch
 
 # CVE-2015-5697 (rhbz 1249011 1249013)
 ApplyPatch md-use-kzalloc-when-bitmap-is-disabled.patch
+
+#rhbz 1244511
+ApplyPatch HID-chicony-Add-support-for-Acer-Aspire-Switch-12.patch
 
 # Surface Pro 3
 ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -2265,6 +2271,12 @@ fi
 #                                    ||----w |
 #                                    ||     ||
 %changelog
+* Tue Aug 04 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Patch from Nicholas Kudriavtsev for Acer Switch 12 Fn keys (rhbz 1244511)
+
+* Tue Aug  4 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Back port AMD Seattle a0 4.1 NIC driver update
+
 * Mon Aug 03 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.4-100
 - Linux v4.1.4
 - CVE-2015-5697 info leak in md driver (rhbz 1249011 1249013)
