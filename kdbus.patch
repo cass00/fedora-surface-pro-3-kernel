@@ -49186,3 +49186,2651 @@ index 27a5021fe70f..432dba4dcfdc 100644
 -- 
 2.4.3
 
+From 12000cd279ab5502006441c406ceba5bde44be71 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 6 Aug 2015 10:21:20 +0200
+Subject: [PATCH 1/9] kdbus: return EBADSLT on replies without slot
+
+If you send a reply without an active reply slot, we used to return EPERM.
+However, this makes it impossible to distinguish this case from a real
+permission-denied error (eg., LSM). Hence, make sure we return a unique
+error-code if the reply-slot is missing.
+
+With this patch, you get EBADSLT ("Invalid slot") if you call
+KDBUS_CMD_SEND with a reply-cookie that has no valid slot.
+
+Reviewed-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ ipc/kdbus/connection.c                       | 2 +-
+ tools/testing/selftests/kdbus/test-message.c | 2 +-
+ tools/testing/selftests/kdbus/test-sync.c    | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/ipc/kdbus/connection.c b/ipc/kdbus/connection.c
+index d94b417e0f32..2787bd7d00c1 100644
+--- a/ipc/kdbus/connection.c
++++ b/ipc/kdbus/connection.c
+@@ -1123,7 +1123,7 @@ static int kdbus_conn_reply(struct kdbus_conn *src,
+ 	mutex_unlock(&dst->lock);
+ 
+ 	if (!reply) {
+-		ret = -EPERM;
++		ret = -EBADSLT;
+ 		goto exit;
+ 	}
+ 
+diff --git a/tools/testing/selftests/kdbus/test-message.c b/tools/testing/selftests/kdbus/test-message.c
+index ddc1e0af877b..563dc859077a 100644
+--- a/tools/testing/selftests/kdbus/test-message.c
++++ b/tools/testing/selftests/kdbus/test-message.c
+@@ -75,7 +75,7 @@ int kdbus_test_message_basic(struct kdbus_test_env *env)
+ 
+ 	/* Faked replies with a valid reply cookie are rejected */
+ 	ret = kdbus_msg_send_reply(conn, time(NULL) ^ cookie, sender->id);
+-	ASSERT_RETURN(ret == -EPERM);
++	ASSERT_RETURN(ret == -EBADSLT);
+ 
+ 	ret = kdbus_free(conn, offset);
+ 	ASSERT_RETURN(ret == 0);
+diff --git a/tools/testing/selftests/kdbus/test-sync.c b/tools/testing/selftests/kdbus/test-sync.c
+index e2be910d2ece..0655a545fbf1 100644
+--- a/tools/testing/selftests/kdbus/test-sync.c
++++ b/tools/testing/selftests/kdbus/test-sync.c
+@@ -235,7 +235,7 @@ static void *run_thread_reply(void *data)
+ 
+ 	/* using an unknown cookie must fail */
+ 	ret = kdbus_msg_send_reply(conn_a, ~cookie, conn_b->id);
+-	if (ret != -EPERM) {
++	if (ret != -EBADSLT) {
+ 		status = TEST_ERR;
+ 		goto exit_thread;
+ 	}
+-- 
+2.4.3
+
+
+From 2fee35fd480b2387e1f148fdc2125cc93708501b Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 6 Aug 2015 10:21:21 +0200
+Subject: [PATCH 2/9] kdbus: reduce stack buffer to 256 bytes
+
+This reduces the stack-buffer for small ioctl payloads to 256 bytes. As
+seen during real workloads, this is more than enough. And we really
+should reduce stack pressure. Hence, lets limit the stack buffers to 256
+bytes.
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ ipc/kdbus/handle.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/ipc/kdbus/handle.h b/ipc/kdbus/handle.h
+index 8a36c0595091..5dde2c10bed4 100644
+--- a/ipc/kdbus/handle.h
++++ b/ipc/kdbus/handle.h
+@@ -45,7 +45,7 @@ struct kdbus_arg {
+  * @argv:		array of items this command supports
+  * @user:		set by parser to user-space location of current command
+  * @cmd:		set by parser to kernel copy of command payload
+- * @cmd_buf:		512 bytes inline buf to avoid kmalloc() on small cmds
++ * @cmd_buf:		inline buf to avoid kmalloc() on small cmds
+  * @items:		points to item array in @cmd
+  * @items_size:		size of @items in bytes
+  * @is_cmd:		whether this is a command-payload or msg-payload
+@@ -55,7 +55,7 @@ struct kdbus_arg {
+  * the object to kdbus_args_parse(). The parser will copy the command payload
+  * into kernel-space and verify the correctness of the data.
+  *
+- * We use a 512 bytes buffer for small command payloads, to be allocated on
++ * We use a 256 bytes buffer for small command payloads, to be allocated on
+  * stack on syscall entrance.
+  */
+ struct kdbus_args {
+@@ -65,7 +65,7 @@ struct kdbus_args {
+ 
+ 	struct kdbus_cmd __user *user;
+ 	struct kdbus_cmd *cmd;
+-	u8 cmd_buf[512];
++	u8 cmd_buf[256];
+ 
+ 	struct kdbus_item *items;
+ 	size_t items_size;
+-- 
+2.4.3
+
+
+From cff26ca42ae55286f5b8366302812d16bbc4a90a Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 6 Aug 2015 10:21:22 +0200
+Subject: [PATCH 3/9] kdbus: use separate counter for message IDs
+
+For each kdbus domain, we maintain an ID-counter to guarantee unique IDs
+across all objects. We also used to use it for message IDs. However, this
+requires touching a shared cacheline on each message transaction, even
+though we never guaranteed global ordering across buses, anyway.
+
+Introduce a separate counter which is used solely for message IDs.
+Semantics stay the same, but it no longer relates to IDs across buses.
+
+Reviewed-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ ipc/kdbus/bus.h     | 2 ++
+ ipc/kdbus/message.c | 2 +-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/ipc/kdbus/bus.h b/ipc/kdbus/bus.h
+index 238986eff92f..8c2acaed6258 100644
+--- a/ipc/kdbus/bus.h
++++ b/ipc/kdbus/bus.h
+@@ -44,6 +44,7 @@ struct kdbus_user;
+  * @domain:		Domain of this bus
+  * @creator:		Creator of the bus
+  * @creator_meta:	Meta information about the bus creator
++ * @last_message_id:	Last used message id
+  * @policy_db:		Policy database for this bus
+  * @name_registry:	Name registry of this bus
+  * @conn_rwlock:	Read/Write lock for all lists of child connections
+@@ -67,6 +68,7 @@ struct kdbus_bus {
+ 	struct kdbus_meta_proc *creator_meta;
+ 
+ 	/* protected by own locks */
++	atomic64_t last_message_id;
+ 	struct kdbus_policy_db policy_db;
+ 	struct kdbus_name_registry *name_registry;
+ 
+diff --git a/ipc/kdbus/message.c b/ipc/kdbus/message.c
+index 432dba4dcfdc..ae565cd343f8 100644
+--- a/ipc/kdbus/message.c
++++ b/ipc/kdbus/message.c
+@@ -671,7 +671,7 @@ static struct kdbus_staging *kdbus_staging_new(struct kdbus_bus *bus,
+ 	if (!staging)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	staging->msg_seqnum = atomic64_inc_return(&bus->domain->last_id);
++	staging->msg_seqnum = atomic64_inc_return(&bus->last_message_id);
+ 	staging->n_parts = 0; /* we reserve n_parts, but don't enforce them */
+ 	staging->parts = (void *)(staging + 1);
+ 
+-- 
+2.4.3
+
+
+From 41c64712fef883818dadd5796f7522f675931d16 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 6 Aug 2015 10:21:23 +0200
+Subject: [PATCH 4/9] kdbus: move privilege checking in kdbus_conn_new()
+
+Instead of relying on handle.c to perform privilege evaluation and
+passing information along, move this into kdbus_conn_new(). This has the
+benefit that we can now split 'owner' level and 'privileged' levels
+apart. This will be required for following extensions that need to
+distinguish both cases.
+
+Also, pass on 'struct file*' from handle into kdbus_conn_new(). Most
+kernel helpers cannot accept 'struct cred*' but instead only operate on
+files (and access file->f_cred then).
+
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ ipc/kdbus/connection.c | 41 ++++++++++++++++++++++++++++++++---------
+ ipc/kdbus/connection.h |  6 ++++--
+ ipc/kdbus/handle.c     |  2 +-
+ 3 files changed, 37 insertions(+), 12 deletions(-)
+
+diff --git a/ipc/kdbus/connection.c b/ipc/kdbus/connection.c
+index 2787bd7d00c1..243cbc77624e 100644
+--- a/ipc/kdbus/connection.c
++++ b/ipc/kdbus/connection.c
+@@ -52,7 +52,8 @@
+ #define KDBUS_CONN_ACTIVE_BIAS	(INT_MIN + 2)
+ #define KDBUS_CONN_ACTIVE_NEW	(INT_MIN + 1)
+ 
+-static struct kdbus_conn *kdbus_conn_new(struct kdbus_ep *ep, bool privileged,
++static struct kdbus_conn *kdbus_conn_new(struct kdbus_ep *ep,
++					 struct file *file,
+ 					 struct kdbus_cmd_hello *hello,
+ 					 const char *name,
+ 					 const struct kdbus_creds *creds,
+@@ -72,6 +73,8 @@ static struct kdbus_conn *kdbus_conn_new(struct kdbus_ep *ep, bool privileged,
+ 	bool is_policy_holder;
+ 	bool is_activator;
+ 	bool is_monitor;
++	bool privileged;
++	bool owner;
+ 	struct kvec kvec;
+ 	int ret;
+ 
+@@ -81,6 +84,25 @@ static struct kdbus_conn *kdbus_conn_new(struct kdbus_ep *ep, bool privileged,
+ 		struct kdbus_bloom_parameter bloom;
+ 	} bloom_item;
+ 
++	/*
++	 * A connection is considered privileged, if, and only if, it didn't
++	 * connect through a custom endpoint *and* it has CAP_IPC_OWNER on the
++	 * namespace of the current domain.
++	 * Additionally, a connection is considered equivalent to the bus owner
++	 * if it didn't connect through a custom endpoint *and* it either is
++	 * privileged or the same user as the bus owner.
++	 *
++	 * Bus owners and alike can bypass bus policies. Privileged connections
++	 * can additionally change accounting, modify kernel resources and
++	 * perform restricted operations, as long as they're privileged on the
++	 * same level as the resources they touch.
++	 */
++	privileged = !ep->user &&
++		     file_ns_capable(file, ep->bus->domain->user_namespace,
++				     CAP_IPC_OWNER);
++	owner = !ep->user &&
++		(privileged || uid_eq(file->f_cred->euid, ep->bus->node.uid));
++
+ 	is_monitor = hello->flags & KDBUS_HELLO_MONITOR;
+ 	is_activator = hello->flags & KDBUS_HELLO_ACTIVATOR;
+ 	is_policy_holder = hello->flags & KDBUS_HELLO_POLICY_HOLDER;
+@@ -97,9 +119,9 @@ static struct kdbus_conn *kdbus_conn_new(struct kdbus_ep *ep, bool privileged,
+ 		return ERR_PTR(-EINVAL);
+ 	if (is_monitor && ep->user)
+ 		return ERR_PTR(-EOPNOTSUPP);
+-	if (!privileged && (is_activator || is_policy_holder || is_monitor))
++	if (!owner && (is_activator || is_policy_holder || is_monitor))
+ 		return ERR_PTR(-EPERM);
+-	if ((creds || pids || seclabel) && !privileged)
++	if (!owner && (creds || pids || seclabel))
+ 		return ERR_PTR(-EPERM);
+ 
+ 	ret = kdbus_sanitize_attach_flags(hello->attach_flags_send,
+@@ -129,12 +151,13 @@ static struct kdbus_conn *kdbus_conn_new(struct kdbus_ep *ep, bool privileged,
+ 	atomic_set(&conn->request_count, 0);
+ 	atomic_set(&conn->lost_count, 0);
+ 	INIT_DELAYED_WORK(&conn->work, kdbus_reply_list_scan_work);
+-	conn->cred = get_current_cred();
++	conn->cred = get_cred(file->f_cred);
+ 	conn->pid = get_pid(task_pid(current));
+ 	get_fs_root(current->fs, &conn->root_path);
+ 	init_waitqueue_head(&conn->wait);
+ 	kdbus_queue_init(&conn->queue);
+ 	conn->privileged = privileged;
++	conn->owner = owner;
+ 	conn->ep = kdbus_ep_ref(ep);
+ 	conn->id = atomic64_inc_return(&bus->domain->last_id);
+ 	conn->flags = hello->flags;
+@@ -1418,7 +1441,7 @@ bool kdbus_conn_policy_own_name(struct kdbus_conn *conn,
+ 			return false;
+ 	}
+ 
+-	if (conn->privileged)
++	if (conn->owner)
+ 		return true;
+ 
+ 	res = kdbus_policy_query(&conn->ep->bus->policy_db, conn_creds,
+@@ -1448,7 +1471,7 @@ bool kdbus_conn_policy_talk(struct kdbus_conn *conn,
+ 					 to, KDBUS_POLICY_TALK))
+ 		return false;
+ 
+-	if (conn->privileged)
++	if (conn->owner)
+ 		return true;
+ 	if (uid_eq(conn_creds->euid, to->cred->uid))
+ 		return true;
+@@ -1567,12 +1590,12 @@ bool kdbus_conn_policy_see_notification(struct kdbus_conn *conn,
+ /**
+  * kdbus_cmd_hello() - handle KDBUS_CMD_HELLO
+  * @ep:			Endpoint to operate on
+- * @privileged:		Whether the caller is privileged
++ * @file:		File this connection is opened on
+  * @argp:		Command payload
+  *
+  * Return: NULL or newly created connection on success, ERR_PTR on failure.
+  */
+-struct kdbus_conn *kdbus_cmd_hello(struct kdbus_ep *ep, bool privileged,
++struct kdbus_conn *kdbus_cmd_hello(struct kdbus_ep *ep, struct file *file,
+ 				   void __user *argp)
+ {
+ 	struct kdbus_cmd_hello *cmd;
+@@ -1607,7 +1630,7 @@ struct kdbus_conn *kdbus_cmd_hello(struct kdbus_ep *ep, bool privileged,
+ 
+ 	item_name = argv[1].item ? argv[1].item->str : NULL;
+ 
+-	c = kdbus_conn_new(ep, privileged, cmd, item_name,
++	c = kdbus_conn_new(ep, file, cmd, item_name,
+ 			   argv[2].item ? &argv[2].item->creds : NULL,
+ 			   argv[3].item ? &argv[3].item->pids : NULL,
+ 			   argv[4].item ? argv[4].item->str : NULL,
+diff --git a/ipc/kdbus/connection.h b/ipc/kdbus/connection.h
+index 5ee864eb0e41..8e0180ace3f6 100644
+--- a/ipc/kdbus/connection.h
++++ b/ipc/kdbus/connection.h
+@@ -73,7 +73,8 @@ struct kdbus_staging;
+  * @activator_of:	Well-known name entry this connection acts as an
+  * @names_list:		List of well-known names
+  * @names_queue_list:	Well-known names this connection waits for
+- * @privileged:		Whether this connection is privileged on the bus
++ * @privileged:		Whether this connection is privileged on the domain
++ * @owner:		Owned by the same user as the bus owner
+  */
+ struct kdbus_conn {
+ 	struct kref kref;
+@@ -116,6 +117,7 @@ struct kdbus_conn {
+ 	struct list_head names_queue_list;
+ 
+ 	bool privileged:1;
++	bool owner:1;
+ };
+ 
+ struct kdbus_conn *kdbus_conn_ref(struct kdbus_conn *conn);
+@@ -154,7 +156,7 @@ bool kdbus_conn_policy_see_notification(struct kdbus_conn *conn,
+ 					const struct kdbus_msg *msg);
+ 
+ /* command dispatcher */
+-struct kdbus_conn *kdbus_cmd_hello(struct kdbus_ep *ep, bool privileged,
++struct kdbus_conn *kdbus_cmd_hello(struct kdbus_ep *ep, struct file *file,
+ 				   void __user *argp);
+ int kdbus_cmd_byebye_unlocked(struct kdbus_conn *conn, void __user *argp);
+ int kdbus_cmd_conn_info(struct kdbus_conn *conn, void __user *argp);
+diff --git a/ipc/kdbus/handle.c b/ipc/kdbus/handle.c
+index e0e06b0e1114..a93c385c6280 100644
+--- a/ipc/kdbus/handle.c
++++ b/ipc/kdbus/handle.c
+@@ -431,7 +431,7 @@ static long kdbus_handle_ioctl_ep(struct file *file, unsigned int cmd,
+ 		break;
+ 
+ 	case KDBUS_CMD_HELLO:
+-		conn = kdbus_cmd_hello(file_ep, handle->privileged, buf);
++		conn = kdbus_cmd_hello(file_ep, file, buf);
+ 		if (IS_ERR_OR_NULL(conn)) {
+ 			ret = PTR_ERR_OR_ZERO(conn);
+ 			break;
+-- 
+2.4.3
+
+
+From 1cd893dae99f8169c0f0620f343e3ee2379d0d28 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 6 Aug 2015 10:21:24 +0200
+Subject: [PATCH 5/9] kdbus: perform accounting on proxied uids
+
+If a connection proxies a uid, we should make sure to perform accounting
+on that passed uid. Otherwise, limits will be shared across all proxied
+users (or we'd require the proxy to run setuid() and thus require
+CAP_SETUID).
+However, this is only allowed if the proxy is privileged on the bus. That
+is, it must have CAP_IPC_ADMIN on the domain and the passed uid must be
+mapped in that domain.
+
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ ipc/kdbus/connection.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/ipc/kdbus/connection.c b/ipc/kdbus/connection.c
+index 243cbc77624e..c81888ed1138 100644
+--- a/ipc/kdbus/connection.c
++++ b/ipc/kdbus/connection.c
+@@ -237,11 +237,21 @@ static struct kdbus_conn *kdbus_conn_new(struct kdbus_ep *ep,
+ 	 * Note that limits are always accounted against the real UID, not
+ 	 * the effective UID (cred->user always points to the accounting of
+ 	 * cred->uid, not cred->euid).
++	 * In case the caller is privileged, we allow changing the accounting
++	 * to the faked user.
+ 	 */
+ 	if (ep->user) {
+ 		conn->user = kdbus_user_ref(ep->user);
+ 	} else {
+-		conn->user = kdbus_user_lookup(ep->bus->domain, current_uid());
++		kuid_t uid;
++
++		if (conn->meta_fake && uid_valid(conn->meta_fake->uid) &&
++		    conn->privileged)
++			uid = conn->meta_fake->uid;
++		else
++			uid = conn->cred->uid;
++
++		conn->user = kdbus_user_lookup(ep->bus->domain, uid);
+ 		if (IS_ERR(conn->user)) {
+ 			ret = PTR_ERR(conn->user);
+ 			conn->user = NULL;
+-- 
+2.4.3
+
+
+From 9dad3c87e273ac8e895ec86252bd79792d49da77 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 6 Aug 2015 10:21:25 +0200
+Subject: [PATCH 6/9] kdbus: inline privilege checks
+
+Instead of caching privilege information in 'kdbus_handle' (and thus
+increasing the size of each handle by 8 byte), perform privilege checks
+on the cached creds in file->f_cred inline. None of the functions that
+need those checks is a fast path (in fact, it's just EP_MAKE that needs
+it right now), so there's no need to cache the data.
+
+If more functions need this check later on, we should turn it into a
+small static helper.
+
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ ipc/kdbus/handle.c | 34 +++++++++++-----------------------
+ 1 file changed, 11 insertions(+), 23 deletions(-)
+
+diff --git a/ipc/kdbus/handle.c b/ipc/kdbus/handle.c
+index a93c385c6280..4d41ecf9cc7d 100644
+--- a/ipc/kdbus/handle.c
++++ b/ipc/kdbus/handle.c
+@@ -264,7 +264,6 @@ enum kdbus_handle_type {
+  * @bus_owner:		bus this handle owns
+  * @ep_owner:		endpoint this handle owns
+  * @conn:		connection this handle owns
+- * @privileged:		Flag to mark a handle as privileged
+  */
+ struct kdbus_handle {
+ 	struct mutex lock;
+@@ -275,8 +274,6 @@ struct kdbus_handle {
+ 		struct kdbus_ep *ep_owner;
+ 		struct kdbus_conn *conn;
+ 	};
+-
+-	bool privileged:1;
+ };
+ 
+ static int kdbus_handle_open(struct inode *inode, struct file *file)
+@@ -298,23 +295,6 @@ static int kdbus_handle_open(struct inode *inode, struct file *file)
+ 	mutex_init(&handle->lock);
+ 	handle->type = KDBUS_HANDLE_NONE;
+ 
+-	if (node->type == KDBUS_NODE_ENDPOINT) {
+-		struct kdbus_ep *ep = kdbus_ep_from_node(node);
+-		struct kdbus_bus *bus = ep->bus;
+-
+-		/*
+-		 * A connection is privileged if it is opened on an endpoint
+-		 * without custom policy and either:
+-		 *   * the user has CAP_IPC_OWNER in the domain user namespace
+-		 * or
+-		 *   * the callers euid matches the uid of the bus creator
+-		 */
+-		if (!ep->user &&
+-		    (ns_capable(bus->domain->user_namespace, CAP_IPC_OWNER) ||
+-		     uid_eq(file->f_cred->euid, bus->node.uid)))
+-			handle->privileged = true;
+-	}
+-
+ 	file->private_data = handle;
+ 	ret = 0;
+ 
+@@ -406,6 +386,7 @@ static long kdbus_handle_ioctl_ep(struct file *file, unsigned int cmd,
+ 	struct kdbus_handle *handle = file->private_data;
+ 	struct kdbus_node *node = file_inode(file)->i_private;
+ 	struct kdbus_ep *ep, *file_ep = kdbus_ep_from_node(node);
++	struct kdbus_bus *bus = file_ep->bus;
+ 	struct kdbus_conn *conn;
+ 	int ret = 0;
+ 
+@@ -413,14 +394,20 @@ static long kdbus_handle_ioctl_ep(struct file *file, unsigned int cmd,
+ 		return -ESHUTDOWN;
+ 
+ 	switch (cmd) {
+-	case KDBUS_CMD_ENDPOINT_MAKE:
++	case KDBUS_CMD_ENDPOINT_MAKE: {
++		bool priv;
++
++		priv = uid_eq(file->f_cred->euid, bus->node.uid) ||
++		       file_ns_capable(file, bus->domain->user_namespace,
++				       CAP_IPC_OWNER);
++
+ 		/* creating custom endpoints is a privileged operation */
+-		if (!handle->privileged) {
++		if (file_ep->user || !priv) {
+ 			ret = -EPERM;
+ 			break;
+ 		}
+ 
+-		ep = kdbus_cmd_ep_make(file_ep->bus, buf);
++		ep = kdbus_cmd_ep_make(bus, buf);
+ 		if (IS_ERR_OR_NULL(ep)) {
+ 			ret = PTR_ERR_OR_ZERO(ep);
+ 			break;
+@@ -429,6 +416,7 @@ static long kdbus_handle_ioctl_ep(struct file *file, unsigned int cmd,
+ 		handle->ep_owner = ep;
+ 		ret = KDBUS_HANDLE_EP_OWNER;
+ 		break;
++	}
+ 
+ 	case KDBUS_CMD_HELLO:
+ 		conn = kdbus_cmd_hello(file_ep, file, buf);
+-- 
+2.4.3
+
+
+From c4bf3679fb862abfc7064c975a5782cdb2a01c9e Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 6 Aug 2015 10:21:26 +0200
+Subject: [PATCH 7/9] kdbus: consolidate common code
+
+Move the file-credential checkers into kdbus_ep_*() helper functions to
+avoid hard-coding the same behavior in multiple places.
+
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ ipc/kdbus/connection.c | 20 ++------------------
+ ipc/kdbus/endpoint.c   | 28 ++++++++++++++++++++++++++++
+ ipc/kdbus/endpoint.h   |  3 +++
+ ipc/kdbus/handle.c     |  8 +-------
+ 4 files changed, 34 insertions(+), 25 deletions(-)
+
+diff --git a/ipc/kdbus/connection.c b/ipc/kdbus/connection.c
+index c81888ed1138..aa3296ea4f93 100644
+--- a/ipc/kdbus/connection.c
++++ b/ipc/kdbus/connection.c
+@@ -84,24 +84,8 @@ static struct kdbus_conn *kdbus_conn_new(struct kdbus_ep *ep,
+ 		struct kdbus_bloom_parameter bloom;
+ 	} bloom_item;
+ 
+-	/*
+-	 * A connection is considered privileged, if, and only if, it didn't
+-	 * connect through a custom endpoint *and* it has CAP_IPC_OWNER on the
+-	 * namespace of the current domain.
+-	 * Additionally, a connection is considered equivalent to the bus owner
+-	 * if it didn't connect through a custom endpoint *and* it either is
+-	 * privileged or the same user as the bus owner.
+-	 *
+-	 * Bus owners and alike can bypass bus policies. Privileged connections
+-	 * can additionally change accounting, modify kernel resources and
+-	 * perform restricted operations, as long as they're privileged on the
+-	 * same level as the resources they touch.
+-	 */
+-	privileged = !ep->user &&
+-		     file_ns_capable(file, ep->bus->domain->user_namespace,
+-				     CAP_IPC_OWNER);
+-	owner = !ep->user &&
+-		(privileged || uid_eq(file->f_cred->euid, ep->bus->node.uid));
++	privileged = kdbus_ep_is_privileged(ep, file);
++	owner = kdbus_ep_is_owner(ep, file);
+ 
+ 	is_monitor = hello->flags & KDBUS_HELLO_MONITOR;
+ 	is_activator = hello->flags & KDBUS_HELLO_ACTIVATOR;
+diff --git a/ipc/kdbus/endpoint.c b/ipc/kdbus/endpoint.c
+index 977964dbb44a..44e7a20de9c2 100644
+--- a/ipc/kdbus/endpoint.c
++++ b/ipc/kdbus/endpoint.c
+@@ -184,6 +184,34 @@ struct kdbus_ep *kdbus_ep_unref(struct kdbus_ep *ep)
+ }
+ 
+ /**
++ * kdbus_ep_is_privileged() - check whether a file is privileged
++ * @ep:		endpoint to operate on
++ * @file:	file to test
++ *
++ * Return: True if @file is privileged in the domain of @ep.
++ */
++bool kdbus_ep_is_privileged(struct kdbus_ep *ep, struct file *file)
++{
++	return !ep->user &&
++		file_ns_capable(file, ep->bus->domain->user_namespace,
++				CAP_IPC_OWNER);
++}
++
++/**
++ * kdbus_ep_is_owner() - check whether a file should be treated as bus owner
++ * @ep:		endpoint to operate on
++ * @file:	file to test
++ *
++ * Return: True if @file should be treated as bus owner on @ep
++ */
++bool kdbus_ep_is_owner(struct kdbus_ep *ep, struct file *file)
++{
++	return !ep->user &&
++		(uid_eq(file->f_cred->euid, ep->bus->node.uid) ||
++		 kdbus_ep_is_privileged(ep, file));
++}
++
++/**
+  * kdbus_cmd_ep_make() - handle KDBUS_CMD_ENDPOINT_MAKE
+  * @bus:		bus to operate on
+  * @argp:		command payload
+diff --git a/ipc/kdbus/endpoint.h b/ipc/kdbus/endpoint.h
+index bc1b94a70f93..e0da59f01a7a 100644
+--- a/ipc/kdbus/endpoint.h
++++ b/ipc/kdbus/endpoint.h
+@@ -61,6 +61,9 @@ struct kdbus_ep *kdbus_ep_new(struct kdbus_bus *bus, const char *name,
+ struct kdbus_ep *kdbus_ep_ref(struct kdbus_ep *ep);
+ struct kdbus_ep *kdbus_ep_unref(struct kdbus_ep *ep);
+ 
++bool kdbus_ep_is_privileged(struct kdbus_ep *ep, struct file *file);
++bool kdbus_ep_is_owner(struct kdbus_ep *ep, struct file *file);
++
+ struct kdbus_ep *kdbus_cmd_ep_make(struct kdbus_bus *bus, void __user *argp);
+ int kdbus_cmd_ep_update(struct kdbus_ep *ep, void __user *argp);
+ 
+diff --git a/ipc/kdbus/handle.c b/ipc/kdbus/handle.c
+index 4d41ecf9cc7d..fc60932d69c7 100644
+--- a/ipc/kdbus/handle.c
++++ b/ipc/kdbus/handle.c
+@@ -395,14 +395,8 @@ static long kdbus_handle_ioctl_ep(struct file *file, unsigned int cmd,
+ 
+ 	switch (cmd) {
+ 	case KDBUS_CMD_ENDPOINT_MAKE: {
+-		bool priv;
+-
+-		priv = uid_eq(file->f_cred->euid, bus->node.uid) ||
+-		       file_ns_capable(file, bus->domain->user_namespace,
+-				       CAP_IPC_OWNER);
+-
+ 		/* creating custom endpoints is a privileged operation */
+-		if (file_ep->user || !priv) {
++		if (!kdbus_ep_is_owner(file_ep, file)) {
+ 			ret = -EPERM;
+ 			break;
+ 		}
+-- 
+2.4.3
+
+
+From 146f50d92e16b684da73ecbb290d980babe98366 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 6 Aug 2015 10:21:27 +0200
+Subject: [PATCH 8/9] kdbus/samples: skip if __NR_memfd_create is not defined
+
+We require __NR_memfd_create for the kdbus samples. Make sure we skip
+compilation if the target architecture and kernel do not support memfds.
+
+Reported-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+Reviewed-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ samples/kdbus/kdbus-workers.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/samples/kdbus/kdbus-workers.c b/samples/kdbus/kdbus-workers.c
+index c3ba958639f3..5a6dfdce3bfd 100644
+--- a/samples/kdbus/kdbus-workers.c
++++ b/samples/kdbus/kdbus-workers.c
+@@ -59,9 +59,11 @@
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
++#include <sys/syscall.h>
+ 
+ /* glibc < 2.7 does not ship sys/signalfd.h */
+-#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 7
++/* we require kernels with __NR_memfd_create */
++#if __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 7 && defined(__NR_memfd_create)
+ 
+ #include <ctype.h>
+ #include <errno.h>
+@@ -75,7 +77,6 @@
+ #include <sys/mman.h>
+ #include <sys/poll.h>
+ #include <sys/signalfd.h>
+-#include <sys/syscall.h>
+ #include <sys/time.h>
+ #include <sys/wait.h>
+ #include <time.h>
+-- 
+2.4.3
+
+
+From 917ee9c6252234fdb8e08670d3c31b6cef18e902 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Thu, 6 Aug 2015 10:21:28 +0200
+Subject: [PATCH 9/9] kdbus/tests: properly parse KDBUS_CMD_LIST objects
+
+There is no reason to assume the information returned by KDBUS_CMD_LIST
+contains only a single KDBUS_ITEM_OWNED_NAME. Parse each of them properly
+and don't bail out early.
+
+Reviewed-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ tools/testing/selftests/kdbus/kdbus-util.c |  9 +++++----
+ tools/testing/selftests/kdbus/test-names.c | 17 +++++++++++------
+ 2 files changed, 16 insertions(+), 10 deletions(-)
+
+diff --git a/tools/testing/selftests/kdbus/kdbus-util.c b/tools/testing/selftests/kdbus/kdbus-util.c
+index a5e54ca3a492..82fa89b1a881 100644
+--- a/tools/testing/selftests/kdbus/kdbus-util.c
++++ b/tools/testing/selftests/kdbus/kdbus-util.c
+@@ -1155,11 +1155,12 @@ int kdbus_list(struct kdbus_conn *conn, uint64_t flags)
+ 			if (item->type == KDBUS_ITEM_OWNED_NAME) {
+ 				n = item->name.name;
+ 				flags = item->name.flags;
+-			}
+ 
+-		kdbus_printf("%8llu flags=0x%08llx conn=0x%08llx '%s'\n",
+-			     name->id, (unsigned long long) flags,
+-			     name->flags, n);
++				kdbus_printf("%8llu flags=0x%08llx conn=0x%08llx '%s'\n",
++					     name->id,
++					     (unsigned long long) flags,
++					     name->flags, n);
++			}
+ 	}
+ 	kdbus_printf("\n");
+ 
+diff --git a/tools/testing/selftests/kdbus/test-names.c b/tools/testing/selftests/kdbus/test-names.c
+index 66ebb47370eb..fd4ac5adc6d2 100644
+--- a/tools/testing/selftests/kdbus/test-names.c
++++ b/tools/testing/selftests/kdbus/test-names.c
+@@ -35,15 +35,20 @@ static int conn_is_name_owner(const struct kdbus_conn *conn,
+ 		struct kdbus_item *item;
+ 		const char *n = NULL;
+ 
+-		KDBUS_ITEM_FOREACH(item, name, items)
+-			if (item->type == KDBUS_ITEM_OWNED_NAME)
++		KDBUS_ITEM_FOREACH(item, name, items) {
++			if (item->type == KDBUS_ITEM_OWNED_NAME) {
+ 				n = item->name.name;
+ 
+-		if (name->id == conn->id &&
+-		    n && strcmp(needle, n) == 0) {
+-			found = true;
+-			break;
++				if (name->id == conn->id &&
++				    n && strcmp(needle, n) == 0) {
++					found = true;
++					break;
++				}
++			}
+ 		}
++
++		if (found)
++			break;
+ 	}
+ 
+ 	ret = kdbus_free(conn, cmd_list.offset);
+-- 
+2.4.3
+
+From 0e807c0b41b9e5a434f803a3ea0ba12ed316cbb7 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Fri, 7 Aug 2015 16:36:33 +0200
+Subject: [PATCH 1/4] kdbus: restructure name-registry to follow dbus-spec
+
+The DBus Specification [1] is pretty clear about how name-acquisition,
+queueing and releasing must work. Most of it's peculiarities nobody
+relies on, but we better comply to them to at least allow proper
+backwards compatibility via bus-proxy.
+
+In particular, this means we don't implement the following details:
+ * NameAcquire must update the stored flags of a name-owner if it is
+   already queued or owns the name.
+ * Only KDBUS_NAME_QUEUE and KDBUS_NAME_ALLOW_REPLACEMENT are stored
+   flags of name owners. Everything else is only used during command
+   execution and/or as reply flags.
+ * NameAcquire on an already queued owner must not change the position in
+   the queue.
+ * KDBUS_NAME_REPLACE_EXISTING for already queued ownes *jumps* the queue
+   if the primary owner has ALLOW_REPLACEMENT set.
+ * If a primary owner is replaced by someone else, they must retain their
+   stored name-flags.
+ * If a primary owner is replaced by someone else, they must be placed at
+   second position in the queue, if queuing is requested.
+
+In dbus-daemon the name-owner queue is a single queue. That is, the
+primary owner of a name is not special, instead, it simply is the first
+queued owner. This explains most of the peculiarities of the NameAcquire
+behavior and makes it much easier to implement them.
+
+Hence, this patch rewrites the name-registry to follow the lead:
+ * *ANY* name owner is now represented by a "struct kdbus_name_owner"
+   objects, regardless whether they're queued, activators or primary.
+ * All name-ownerships are linked in a *single* list on each connection.
+   This gets rid of redundant conn->queued_names_list and
+   conn->activator_of.
+ * Limits and control functions always apply to 'struct kdbus_name_owner'
+   now, instead  of 'struct kdbus_name_entry'. This solves some issues
+   where name-ownership was properly limited, but name-queueing was not.
+ * Activators are now correctly updated regarding KDBUS_NAME_IN_QUEUE
+   depending whether they own the name or not.
+ * owner->flags is now kept clean. Only real requested flags are stored,
+   any operation-flags are cleared.
+ * Special handling of activators is kept to a minimum. This really
+   allows us to treat them more like real queued owners that allow
+   replacement, than something special.
+
+With this in place, we follow the dbus-spec regarding behavior of
+name-acquisition perfectly. Hence, the bus-proxy can properly implement
+backwards-compatibility to dbus1.
+
+[1] http://dbus.freedesktop.org/doc/dbus-specification.html
+
+Reviewed-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ ipc/kdbus/connection.c |  53 ++--
+ ipc/kdbus/connection.h |   9 +-
+ ipc/kdbus/metadata.c   |  21 +-
+ ipc/kdbus/names.c      | 749 +++++++++++++++++++++++++++----------------------
+ ipc/kdbus/names.h      |  55 +++-
+ 5 files changed, 496 insertions(+), 391 deletions(-)
+
+diff --git a/ipc/kdbus/connection.c b/ipc/kdbus/connection.c
+index aa3296ea4f93..ef63d6533273 100644
+--- a/ipc/kdbus/connection.c
++++ b/ipc/kdbus/connection.c
+@@ -129,9 +129,7 @@ static struct kdbus_conn *kdbus_conn_new(struct kdbus_ep *ep,
+ #endif
+ 	mutex_init(&conn->lock);
+ 	INIT_LIST_HEAD(&conn->names_list);
+-	INIT_LIST_HEAD(&conn->names_queue_list);
+ 	INIT_LIST_HEAD(&conn->reply_list);
+-	atomic_set(&conn->name_count, 0);
+ 	atomic_set(&conn->request_count, 0);
+ 	atomic_set(&conn->lost_count, 0);
+ 	INIT_DELAYED_WORK(&conn->work, kdbus_reply_list_scan_work);
+@@ -284,7 +282,6 @@ static void __kdbus_conn_free(struct kref *kref)
+ 	WARN_ON(delayed_work_pending(&conn->work));
+ 	WARN_ON(!list_empty(&conn->queue.msg_list));
+ 	WARN_ON(!list_empty(&conn->names_list));
+-	WARN_ON(!list_empty(&conn->names_queue_list));
+ 	WARN_ON(!list_empty(&conn->reply_list));
+ 
+ 	if (conn->user) {
+@@ -618,12 +615,13 @@ int kdbus_conn_disconnect(struct kdbus_conn *conn, bool ensure_queue_empty)
+  */
+ bool kdbus_conn_has_name(struct kdbus_conn *conn, const char *name)
+ {
+-	struct kdbus_name_entry *e;
++	struct kdbus_name_owner *owner;
+ 
+ 	lockdep_assert_held(&conn->ep->bus->name_registry->rwlock);
+ 
+-	list_for_each_entry(e, &conn->names_list, conn_entry)
+-		if (strcmp(e->name, name) == 0)
++	list_for_each_entry(owner, &conn->names_list, conn_entry)
++		if (!(owner->flags & KDBUS_NAME_IN_QUEUE) &&
++		    !strcmp(name, owner->name->name))
+ 			return true;
+ 
+ 	return false;
+@@ -1052,6 +1050,7 @@ static int kdbus_pin_dst(struct kdbus_bus *bus,
+ 			 struct kdbus_conn **out_dst)
+ {
+ 	const struct kdbus_msg *msg = staging->msg;
++	struct kdbus_name_owner *owner = NULL;
+ 	struct kdbus_name_entry *name = NULL;
+ 	struct kdbus_conn *dst = NULL;
+ 	int ret;
+@@ -1070,7 +1069,9 @@ static int kdbus_pin_dst(struct kdbus_bus *bus,
+ 	} else {
+ 		name = kdbus_name_lookup_unlocked(bus->name_registry,
+ 						  staging->dst_name);
+-		if (!name)
++		if (name)
++			owner = kdbus_name_get_owner(name);
++		if (!owner)
+ 			return -ESRCH;
+ 
+ 		/*
+@@ -1082,19 +1083,14 @@ static int kdbus_pin_dst(struct kdbus_bus *bus,
+ 		 * owns the given name.
+ 		 */
+ 		if (msg->dst_id != KDBUS_DST_ID_NAME &&
+-		    msg->dst_id != name->conn->id)
++		    msg->dst_id != owner->conn->id)
+ 			return -EREMCHG;
+ 
+-		if (!name->conn && name->activator)
+-			dst = kdbus_conn_ref(name->activator);
+-		else
+-			dst = kdbus_conn_ref(name->conn);
+-
+ 		if ((msg->flags & KDBUS_MSG_NO_AUTO_START) &&
+-		    kdbus_conn_is_activator(dst)) {
+-			ret = -EADDRNOTAVAIL;
+-			goto error;
+-		}
++		    kdbus_conn_is_activator(owner->conn))
++			return -EADDRNOTAVAIL;
++
++		dst = kdbus_conn_ref(owner->conn);
+ 	}
+ 
+ 	*out_name = name;
+@@ -1383,7 +1379,7 @@ static bool kdbus_conn_policy_query_all(struct kdbus_conn *conn,
+ 					struct kdbus_conn *whom,
+ 					unsigned int access)
+ {
+-	struct kdbus_name_entry *ne;
++	struct kdbus_name_owner *owner;
+ 	bool pass = false;
+ 	int res;
+ 
+@@ -1392,10 +1388,14 @@ static bool kdbus_conn_policy_query_all(struct kdbus_conn *conn,
+ 	down_read(&db->entries_rwlock);
+ 	mutex_lock(&whom->lock);
+ 
+-	list_for_each_entry(ne, &whom->names_list, conn_entry) {
+-		res = kdbus_policy_query_unlocked(db, conn_creds ? : conn->cred,
+-						  ne->name,
+-						  kdbus_strhash(ne->name));
++	list_for_each_entry(owner, &whom->names_list, conn_entry) {
++		if (owner->flags & KDBUS_NAME_IN_QUEUE)
++			continue;
++
++		res = kdbus_policy_query_unlocked(db,
++					conn_creds ? : conn->cred,
++					owner->name->name,
++					kdbus_strhash(owner->name->name));
+ 		if (res >= (int)access) {
+ 			pass = true;
+ 			break;
+@@ -1713,6 +1713,7 @@ int kdbus_cmd_conn_info(struct kdbus_conn *conn, void __user *argp)
+ 	struct kdbus_meta_conn *conn_meta = NULL;
+ 	struct kdbus_pool_slice *slice = NULL;
+ 	struct kdbus_name_entry *entry = NULL;
++	struct kdbus_name_owner *owner = NULL;
+ 	struct kdbus_conn *owner_conn = NULL;
+ 	struct kdbus_item *meta_items = NULL;
+ 	struct kdbus_info info = {};
+@@ -1749,15 +1750,17 @@ int kdbus_cmd_conn_info(struct kdbus_conn *conn, void __user *argp)
+ 
+ 	if (name) {
+ 		entry = kdbus_name_lookup_unlocked(bus->name_registry, name);
+-		if (!entry || !entry->conn ||
++		if (entry)
++			owner = kdbus_name_get_owner(entry);
++		if (!owner ||
+ 		    !kdbus_conn_policy_see_name(conn, current_cred(), name) ||
+-		    (cmd->id != 0 && entry->conn->id != cmd->id)) {
++		    (cmd->id != 0 && owner->conn->id != cmd->id)) {
+ 			/* pretend a name doesn't exist if you cannot see it */
+ 			ret = -ESRCH;
+ 			goto exit;
+ 		}
+ 
+-		owner_conn = kdbus_conn_ref(entry->conn);
++		owner_conn = kdbus_conn_ref(owner->conn);
+ 	} else if (cmd->id > 0) {
+ 		owner_conn = kdbus_bus_find_conn_by_id(bus, cmd->id);
+ 		if (!owner_conn || !kdbus_conn_policy_see(conn, current_cred(),
+diff --git a/ipc/kdbus/connection.h b/ipc/kdbus/connection.h
+index 8e0180ace3f6..1ad082014faa 100644
+--- a/ipc/kdbus/connection.h
++++ b/ipc/kdbus/connection.h
+@@ -30,6 +30,7 @@
+ 					 KDBUS_HELLO_POLICY_HOLDER | \
+ 					 KDBUS_HELLO_MONITOR)
+ 
++struct kdbus_name_entry;
+ struct kdbus_quota;
+ struct kdbus_staging;
+ 
+@@ -61,7 +62,6 @@ struct kdbus_staging;
+  * @cred:		The credentials of the connection at creation time
+  * @pid:		Pid at creation time
+  * @root_path:		Root path at creation time
+- * @name_count:		Number of owned well-known names
+  * @request_count:	Number of pending requests issued by this
+  *			connection that are waiting for replies from
+  *			other peers
+@@ -70,9 +70,8 @@ struct kdbus_staging;
+  * @queue:		The message queue associated with this connection
+  * @quota:		Array of per-user quota indexed by user->id
+  * @n_quota:		Number of elements in quota array
+- * @activator_of:	Well-known name entry this connection acts as an
+  * @names_list:		List of well-known names
+- * @names_queue_list:	Well-known names this connection waits for
++ * @name_count:		Number of owned well-known names
+  * @privileged:		Whether this connection is privileged on the domain
+  * @owner:		Owned by the same user as the bus owner
+  */
+@@ -102,7 +101,6 @@ struct kdbus_conn {
+ 	const struct cred *cred;
+ 	struct pid *pid;
+ 	struct path root_path;
+-	atomic_t name_count;
+ 	atomic_t request_count;
+ 	atomic_t lost_count;
+ 	wait_queue_head_t wait;
+@@ -112,9 +110,8 @@ struct kdbus_conn {
+ 	unsigned int n_quota;
+ 
+ 	/* protected by registry->rwlock */
+-	struct kdbus_name_entry *activator_of;
+ 	struct list_head names_list;
+-	struct list_head names_queue_list;
++	unsigned int name_count;
+ 
+ 	bool privileged:1;
+ 	bool owner:1;
+diff --git a/ipc/kdbus/metadata.c b/ipc/kdbus/metadata.c
+index d4973a90a81e..71ca475a80d5 100644
+--- a/ipc/kdbus/metadata.c
++++ b/ipc/kdbus/metadata.c
+@@ -603,7 +603,7 @@ static void kdbus_meta_conn_collect_timestamp(struct kdbus_meta_conn *mc,
+ static int kdbus_meta_conn_collect_names(struct kdbus_meta_conn *mc,
+ 					 struct kdbus_conn *conn)
+ {
+-	const struct kdbus_name_entry *e;
++	const struct kdbus_name_owner *owner;
+ 	struct kdbus_item *item;
+ 	size_t slen, size;
+ 
+@@ -611,9 +611,11 @@ static int kdbus_meta_conn_collect_names(struct kdbus_meta_conn *mc,
+ 
+ 	size = 0;
+ 	/* open-code length calculation to avoid final padding */
+-	list_for_each_entry(e, &conn->names_list, conn_entry)
+-		size = KDBUS_ALIGN8(size) + KDBUS_ITEM_HEADER_SIZE +
+-			sizeof(struct kdbus_name) + strlen(e->name) + 1;
++	list_for_each_entry(owner, &conn->names_list, conn_entry)
++		if (!(owner->flags & KDBUS_NAME_IN_QUEUE))
++			size = KDBUS_ALIGN8(size) + KDBUS_ITEM_HEADER_SIZE +
++				sizeof(struct kdbus_name) +
++				strlen(owner->name->name) + 1;
+ 
+ 	if (!size)
+ 		return 0;
+@@ -626,12 +628,15 @@ static int kdbus_meta_conn_collect_names(struct kdbus_meta_conn *mc,
+ 	mc->owned_names_items = item;
+ 	mc->owned_names_size = size;
+ 
+-	list_for_each_entry(e, &conn->names_list, conn_entry) {
+-		slen = strlen(e->name) + 1;
++	list_for_each_entry(owner, &conn->names_list, conn_entry) {
++		if (owner->flags & KDBUS_NAME_IN_QUEUE)
++			continue;
++
++		slen = strlen(owner->name->name) + 1;
+ 		kdbus_item_set(item, KDBUS_ITEM_OWNED_NAME, NULL,
+ 			       sizeof(struct kdbus_name) + slen);
+-		item->name.flags = e->flags;
+-		memcpy(item->name.name, e->name, slen);
++		item->name.flags = owner->flags;
++		memcpy(item->name.name, owner->name->name, slen);
+ 		item = KDBUS_ITEM_NEXT(item);
+ 	}
+ 
+diff --git a/ipc/kdbus/names.c b/ipc/kdbus/names.c
+index 057f8061c20f..7a6e61c35ebf 100644
+--- a/ipc/kdbus/names.c
++++ b/ipc/kdbus/names.c
+@@ -34,167 +34,128 @@
+ #include "notify.h"
+ #include "policy.h"
+ 
+-struct kdbus_name_pending {
+-	u64 flags;
+-	struct kdbus_conn *conn;
+-	struct kdbus_name_entry *name;
+-	struct list_head conn_entry;
+-	struct list_head name_entry;
+-};
++#define KDBUS_NAME_SAVED_MASK (KDBUS_NAME_ALLOW_REPLACEMENT |	\
++			       KDBUS_NAME_QUEUE)
+ 
+-static int kdbus_name_pending_new(struct kdbus_name_entry *e,
+-				  struct kdbus_conn *conn, u64 flags)
++static bool kdbus_name_owner_is_used(struct kdbus_name_owner *owner)
+ {
+-	struct kdbus_name_pending *p;
+-
+-	kdbus_conn_assert_active(conn);
+-
+-	p = kmalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
+-		return -ENOMEM;
+-
+-	p->flags = flags;
+-	p->conn = conn;
+-	p->name = e;
+-	list_add_tail(&p->conn_entry, &conn->names_queue_list);
+-	list_add_tail(&p->name_entry, &e->queue);
+-
+-	return 0;
++	return !list_empty(&owner->name_entry) ||
++	       owner == owner->name->activator;
+ }
+ 
+-static void kdbus_name_pending_free(struct kdbus_name_pending *p)
++static struct kdbus_name_owner *
++kdbus_name_owner_new(struct kdbus_conn *conn, struct kdbus_name_entry *name,
++		     u64 flags)
+ {
+-	if (!p)
+-		return;
++	struct kdbus_name_owner *owner;
+ 
+-	list_del(&p->name_entry);
+-	list_del(&p->conn_entry);
+-	kfree(p);
+-}
+-
+-static struct kdbus_name_entry *
+-kdbus_name_entry_new(struct kdbus_name_registry *r, u32 hash, const char *name)
+-{
+-	struct kdbus_name_entry *e;
+-	size_t namelen;
++	kdbus_conn_assert_active(conn);
+ 
+-	namelen = strlen(name);
++	if (conn->name_count >= KDBUS_CONN_MAX_NAMES)
++		return ERR_PTR(-E2BIG);
+ 
+-	e = kmalloc(sizeof(*e) + namelen + 1, GFP_KERNEL);
+-	if (!e)
++	owner = kmalloc(sizeof(*owner), GFP_KERNEL);
++	if (!owner)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	e->name_id = ++r->name_seq_last;
+-	e->flags = 0;
+-	e->conn = NULL;
+-	e->activator = NULL;
+-	INIT_LIST_HEAD(&e->queue);
+-	INIT_LIST_HEAD(&e->conn_entry);
+-	hash_add(r->entries_hash, &e->hentry, hash);
+-	memcpy(e->name, name, namelen + 1);
++	owner->flags = flags & KDBUS_NAME_SAVED_MASK;
++	owner->conn = conn;
++	owner->name = name;
++	list_add_tail(&owner->conn_entry, &conn->names_list);
++	INIT_LIST_HEAD(&owner->name_entry);
+ 
+-	return e;
++	++conn->name_count;
++	return owner;
+ }
+ 
+-static void kdbus_name_entry_free(struct kdbus_name_entry *e)
++static void kdbus_name_owner_free(struct kdbus_name_owner *owner)
+ {
+-	if (!e)
++	if (!owner)
+ 		return;
+ 
+-	WARN_ON(!list_empty(&e->conn_entry));
+-	WARN_ON(!list_empty(&e->queue));
+-	WARN_ON(e->activator);
+-	WARN_ON(e->conn);
+-
+-	hash_del(&e->hentry);
+-	kfree(e);
++	WARN_ON(kdbus_name_owner_is_used(owner));
++	--owner->conn->name_count;
++	list_del(&owner->conn_entry);
++	kfree(owner);
+ }
+ 
+-static void kdbus_name_entry_set_owner(struct kdbus_name_entry *e,
+-				       struct kdbus_conn *conn, u64 flags)
++static struct kdbus_name_owner *
++kdbus_name_owner_find(struct kdbus_name_entry *name, struct kdbus_conn *conn)
+ {
+-	WARN_ON(e->conn);
++	struct kdbus_name_owner *owner;
+ 
+-	e->conn = kdbus_conn_ref(conn);
+-	e->flags = flags;
+-	atomic_inc(&conn->name_count);
+-	list_add_tail(&e->conn_entry, &e->conn->names_list);
++	/*
++	 * Use conn->names_list over name->queue to make sure boundaries of
++	 * this linear search are controlled by the connection itself.
++	 * Furthermore, this will find normal owners as well as activators
++	 * without any additional code.
++	 */
++	list_for_each_entry(owner, &conn->names_list, conn_entry)
++		if (owner->name == name)
++			return owner;
++
++	return NULL;
+ }
+ 
+-static void kdbus_name_entry_remove_owner(struct kdbus_name_entry *e)
++static bool kdbus_name_entry_is_used(struct kdbus_name_entry *name)
+ {
+-	WARN_ON(!e->conn);
+-
+-	list_del_init(&e->conn_entry);
+-	atomic_dec(&e->conn->name_count);
+-	e->flags = 0;
+-	e->conn = kdbus_conn_unref(e->conn);
++	return !list_empty(&name->queue) || name->activator;
+ }
+ 
+-static void kdbus_name_entry_replace_owner(struct kdbus_name_entry *e,
+-					   struct kdbus_conn *conn, u64 flags)
++static struct kdbus_name_owner *
++kdbus_name_entry_first(struct kdbus_name_entry *name)
+ {
+-	if (WARN_ON(!e->conn) || WARN_ON(conn == e->conn))
+-		return;
+-
+-	kdbus_notify_name_change(conn->ep->bus, KDBUS_ITEM_NAME_CHANGE,
+-				 e->conn->id, conn->id,
+-				 e->flags, flags, e->name);
+-	kdbus_name_entry_remove_owner(e);
+-	kdbus_name_entry_set_owner(e, conn, flags);
++	return list_first_entry_or_null(&name->queue, struct kdbus_name_owner,
++					name_entry);
+ }
+ 
+-/**
+- * kdbus_name_is_valid() - check if a name is valid
+- * @p:			The name to check
+- * @allow_wildcard:	Whether or not to allow a wildcard name
+- *
+- * A name is valid if all of the following criterias are met:
+- *
+- *  - The name has two or more elements separated by a period ('.') character.
+- *  - All elements must contain at least one character.
+- *  - Each element must only contain the ASCII characters "[A-Z][a-z][0-9]_-"
+- *    and must not begin with a digit.
+- *  - The name must not exceed KDBUS_NAME_MAX_LEN.
+- *  - If @allow_wildcard is true, the name may end on '.*'
+- */
+-bool kdbus_name_is_valid(const char *p, bool allow_wildcard)
++static struct kdbus_name_entry *
++kdbus_name_entry_new(struct kdbus_name_registry *r, u32 hash,
++		     const char *name_str)
+ {
+-	bool dot, found_dot = false;
+-	const char *q;
++	struct kdbus_name_entry *name;
++	size_t namelen;
+ 
+-	for (dot = true, q = p; *q; q++) {
+-		if (*q == '.') {
+-			if (dot)
+-				return false;
++	lockdep_assert_held(&r->rwlock);
+ 
+-			found_dot = true;
+-			dot = true;
+-		} else {
+-			bool good;
++	namelen = strlen(name_str);
+ 
+-			good = isalpha(*q) || (!dot && isdigit(*q)) ||
+-				*q == '_' || *q == '-' ||
+-				(allow_wildcard && dot &&
+-					*q == '*' && *(q + 1) == '\0');
++	name = kmalloc(sizeof(*name) + namelen + 1, GFP_KERNEL);
++	if (!name)
++		return ERR_PTR(-ENOMEM);
+ 
+-			if (!good)
+-				return false;
++	name->name_id = ++r->name_seq_last;
++	name->activator = NULL;
++	INIT_LIST_HEAD(&name->queue);
++	hash_add(r->entries_hash, &name->hentry, hash);
++	memcpy(name->name, name_str, namelen + 1);
+ 
+-			dot = false;
+-		}
+-	}
++	return name;
++}
+ 
+-	if (q - p > KDBUS_NAME_MAX_LEN)
+-		return false;
++static void kdbus_name_entry_free(struct kdbus_name_entry *name)
++{
++	if (!name)
++		return;
+ 
+-	if (dot)
+-		return false;
++	WARN_ON(kdbus_name_entry_is_used(name));
++	hash_del(&name->hentry);
++	kfree(name);
++}
+ 
+-	if (!found_dot)
+-		return false;
++static struct kdbus_name_entry *
++kdbus_name_entry_find(struct kdbus_name_registry *r, u32 hash,
++		      const char *name_str)
++{
++	struct kdbus_name_entry *name;
+ 
+-	return true;
++	lockdep_assert_held(&r->rwlock);
++
++	hash_for_each_possible(r->entries_hash, name, hentry, hash)
++		if (!strcmp(name->name, name_str))
++			return name;
++
++	return NULL;
+ }
+ 
+ /**
+@@ -218,32 +179,19 @@ struct kdbus_name_registry *kdbus_name_registry_new(void)
+ }
+ 
+ /**
+- * kdbus_name_registry_free() - drop a name reg's reference
+- * @reg:		The name registry, may be %NULL
++ * kdbus_name_registry_free() - free name registry
++ * @r:		name registry to free, or NULL
+  *
+- * Cleanup the name registry's internal structures.
++ * Free a name registry and cleanup all internal objects. This is a no-op if
++ * you pass NULL as registry.
+  */
+-void kdbus_name_registry_free(struct kdbus_name_registry *reg)
++void kdbus_name_registry_free(struct kdbus_name_registry *r)
+ {
+-	if (!reg)
++	if (!r)
+ 		return;
+ 
+-	WARN_ON(!hash_empty(reg->entries_hash));
+-	kfree(reg);
+-}
+-
+-static struct kdbus_name_entry *
+-kdbus_name_find(struct kdbus_name_registry *reg, u32 hash, const char *name)
+-{
+-	struct kdbus_name_entry *e;
+-
+-	lockdep_assert_held(&reg->rwlock);
+-
+-	hash_for_each_possible(reg->entries_hash, e, hentry, hash)
+-		if (strcmp(e->name, name) == 0)
+-			return e;
+-
+-	return NULL;
++	WARN_ON(!hash_empty(r->entries_hash));
++	kfree(r);
+ }
+ 
+ /**
+@@ -260,169 +208,271 @@ kdbus_name_find(struct kdbus_name_registry *reg, u32 hash, const char *name)
+ struct kdbus_name_entry *
+ kdbus_name_lookup_unlocked(struct kdbus_name_registry *reg, const char *name)
+ {
+-	return kdbus_name_find(reg, kdbus_strhash(name), name);
++	return kdbus_name_entry_find(reg, kdbus_strhash(name), name);
+ }
+ 
+-/**
+- * kdbus_name_acquire() - acquire a name
+- * @reg:		The name registry
+- * @conn:		The connection to pin this entry to
+- * @name:		The name to acquire
+- * @flags:		Acquisition flags (KDBUS_NAME_*)
+- * @return_flags:	Pointer to return flags for the acquired name
+- *			(KDBUS_NAME_*), may be %NULL
+- *
+- * Callers must ensure that @conn is either a privileged bus user or has
+- * sufficient privileges in the policy-db to own the well-known name @name.
+- *
+- * Return: 0 success, negative error number on failure.
+- */
+-int kdbus_name_acquire(struct kdbus_name_registry *reg,
+-		       struct kdbus_conn *conn, const char *name,
+-		       u64 flags, u64 *return_flags)
++static int kdbus_name_become_activator(struct kdbus_name_owner *owner)
+ {
+-	struct kdbus_name_entry *e;
+-	u64 rflags = 0;
+-	int ret = 0;
+-	u32 hash;
+-
+-	kdbus_conn_assert_active(conn);
++	if (kdbus_name_owner_is_used(owner))
++		return -EALREADY;
++	if (owner->name->activator)
++		return -EEXIST;
++
++	owner->name->activator = owner;
++	owner->flags |= KDBUS_NAME_ACTIVATOR;
++
++	if (kdbus_name_entry_first(owner->name))
++		owner->flags |= KDBUS_NAME_IN_QUEUE;
++	else
++		kdbus_notify_name_change(owner->conn->ep->bus,
++					 KDBUS_ITEM_NAME_ADD,
++					 0, owner->conn->id,
++					 0, owner->flags,
++					 owner->name->name);
+ 
+-	down_write(&reg->rwlock);
+-
+-	if (!kdbus_conn_policy_own_name(conn, current_cred(), name)) {
+-		ret = -EPERM;
+-		goto exit_unlock;
+-	}
+-
+-	hash = kdbus_strhash(name);
+-	e = kdbus_name_find(reg, hash, name);
+-	if (!e) {
+-		/* claim new name */
++	return 0;
++}
+ 
+-		if (conn->activator_of) {
+-			ret = -EINVAL;
+-			goto exit_unlock;
+-		}
++static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags)
++{
++	struct kdbus_name_owner *primary, *activator;
++	struct kdbus_name_entry *name;
++	struct kdbus_bus *bus;
++	int ret = 0;
+ 
+-		e = kdbus_name_entry_new(reg, hash, name);
+-		if (IS_ERR(e)) {
+-			ret = PTR_ERR(e);
+-			goto exit_unlock;
++	name = owner->name;
++	bus = owner->conn->ep->bus;
++	primary = kdbus_name_entry_first(name);
++	activator = name->activator;
++
++	/* cannot be activator and acquire a name */
++	if (owner == activator)
++		return -EUCLEAN;
++
++	/* update saved flags */
++	owner->flags = flags & KDBUS_NAME_SAVED_MASK;
++
++	if (!primary) {
++		/*
++		 * No primary owner (but maybe an activator). Take over the
++		 * name.
++		 */
++
++		list_add(&owner->name_entry, &name->queue);
++
++		/* move messages to new owner on activation */
++		if (activator) {
++			kdbus_conn_move_messages(owner->conn, activator->conn,
++						 name->name_id);
++			kdbus_notify_name_change(bus, KDBUS_ITEM_NAME_CHANGE,
++					activator->conn->id, owner->conn->id,
++					activator->flags, owner->flags,
++					name->name);
++			activator->flags |= KDBUS_NAME_IN_QUEUE;
++		} else {
++			kdbus_notify_name_change(bus, KDBUS_ITEM_NAME_ADD,
++						 0, owner->conn->id,
++						 0, owner->flags,
++						 name->name);
+ 		}
+ 
+-		if (kdbus_conn_is_activator(conn)) {
+-			e->activator = kdbus_conn_ref(conn);
+-			conn->activator_of = e;
+-		}
++	} else if (owner == primary) {
++		/*
++		 * Already the primary owner of the name, flags were already
++		 * updated. Nothing to do.
++		 * For compatibility, we have to return -EALREADY.
++		 */
+ 
+-		kdbus_name_entry_set_owner(e, conn, flags);
+-		kdbus_notify_name_change(e->conn->ep->bus, KDBUS_ITEM_NAME_ADD,
+-					 0, e->conn->id, 0, e->flags, e->name);
+-	} else if (e->conn == conn || e == conn->activator_of) {
+-		/* connection already owns that name */
+ 		ret = -EALREADY;
+-	} else if (kdbus_conn_is_activator(conn)) {
+-		/* activator claims existing name */
+ 
+-		if (conn->activator_of) {
+-			ret = -EINVAL; /* multiple names not allowed */
+-		} else if (e->activator) {
+-			ret = -EEXIST; /* only one activator per name */
++	} else if ((primary->flags & KDBUS_NAME_ALLOW_REPLACEMENT) &&
++		   (flags & KDBUS_NAME_REPLACE_EXISTING)) {
++		/*
++		 * We're not the primary owner but can replace it. Move us
++		 * ahead of the primary owner and acquire the name (possibly
++		 * skipping queued owners ahead of us).
++		 */
++
++		list_del_init(&owner->name_entry);
++		list_add(&owner->name_entry, &name->queue);
++
++		kdbus_notify_name_change(bus, KDBUS_ITEM_NAME_CHANGE,
++					 primary->conn->id, owner->conn->id,
++					 primary->flags, owner->flags,
++					 name->name);
++
++		/* requeue old primary, or drop if queueing not wanted */
++		if (primary->flags & KDBUS_NAME_QUEUE) {
++			primary->flags |= KDBUS_NAME_IN_QUEUE;
+ 		} else {
+-			e->activator = kdbus_conn_ref(conn);
+-			conn->activator_of = e;
+-		}
+-	} else if (e->flags & KDBUS_NAME_ACTIVATOR) {
+-		/* claim name of an activator */
+-
+-		kdbus_conn_move_messages(conn, e->activator, 0);
+-		kdbus_name_entry_replace_owner(e, conn, flags);
+-	} else if ((flags & KDBUS_NAME_REPLACE_EXISTING) &&
+-		   (e->flags & KDBUS_NAME_ALLOW_REPLACEMENT)) {
+-		/* claim name of a previous owner */
+-
+-		if (e->flags & KDBUS_NAME_QUEUE) {
+-			/* move owner back to queue if they asked for it */
+-			ret = kdbus_name_pending_new(e, e->conn, e->flags);
+-			if (ret < 0)
+-				goto exit_unlock;
++			list_del_init(&primary->name_entry);
++			kdbus_name_owner_free(primary);
+ 		}
+ 
+-		kdbus_name_entry_replace_owner(e, conn, flags);
+ 	} else if (flags & KDBUS_NAME_QUEUE) {
+-		/* add to waiting-queue of the name */
+-
+-		ret = kdbus_name_pending_new(e, conn, flags);
+-		if (ret >= 0)
+-			/* tell the caller that we queued it */
+-			rflags |= KDBUS_NAME_IN_QUEUE;
++		/*
++		 * Name is already occupied and we cannot take it over, but
++		 * queuing is allowed. Put us silently on the queue, if not
++		 * already there.
++		 */
++
++		owner->flags |= KDBUS_NAME_IN_QUEUE;
++		if (!kdbus_name_owner_is_used(owner))
++			list_add_tail(&owner->name_entry, &name->queue);
++	} else if (kdbus_name_owner_is_used(owner)) {
++		/*
++		 * Already queued on name, but re-queueing was not requested.
++		 * Make sure to unlink it from the name, the caller is
++		 * responsible for releasing it.
++		 */
++
++		list_del_init(&owner->name_entry);
++		ret = -EEXIST;
+ 	} else {
+-		/* the name is busy, return a failure */
++		/*
++		 * Name is already claimed and queueing is not requested.
++		 * Return error to the caller.
++		 */
++
+ 		ret = -EEXIST;
+ 	}
+ 
+-	if (ret == 0 && return_flags)
+-		*return_flags = rflags;
++	return ret;
++}
+ 
+-exit_unlock:
++int kdbus_name_acquire(struct kdbus_name_registry *reg,
++		       struct kdbus_conn *conn, const char *name_str,
++		       u64 flags, u64 *return_flags)
++{
++	struct kdbus_name_entry *name = NULL;
++	struct kdbus_name_owner *owner = NULL;
++	u32 hash;
++	int ret;
++
++	kdbus_conn_assert_active(conn);
++
++	down_write(&reg->rwlock);
++
++	/*
++	 * Verify the connection has access to the name. Do this before testing
++	 * for double-acquisitions and other errors to make sure we do not leak
++	 * information about this name through possible custom endpoints.
++	 */
++	if (!kdbus_conn_policy_own_name(conn, current_cred(), name_str)) {
++		ret = -EPERM;
++		goto exit;
++	}
++
++	/*
++	 * Lookup the name entry. If it already exists, search for an owner
++	 * entry as we might already own that name. If either does not exist,
++	 * we will allocate a fresh one.
++	 */
++	hash = kdbus_strhash(name_str);
++	name = kdbus_name_entry_find(reg, hash, name_str);
++	if (name) {
++		owner = kdbus_name_owner_find(name, conn);
++	} else {
++		name = kdbus_name_entry_new(reg, hash, name_str);
++		if (IS_ERR(name)) {
++			ret = PTR_ERR(name);
++			name = NULL;
++			goto exit;
++		}
++	}
++
++	/* create name owner object if not already queued */
++	if (!owner) {
++		owner = kdbus_name_owner_new(conn, name, flags);
++		if (IS_ERR(owner)) {
++			ret = PTR_ERR(owner);
++			owner = NULL;
++			goto exit;
++		}
++	}
++
++	if (flags & KDBUS_NAME_ACTIVATOR)
++		ret = kdbus_name_become_activator(owner);
++	else
++		ret = kdbus_name_update(owner, flags);
++	if (ret < 0)
++		goto exit;
++
++	if (return_flags)
++		*return_flags = owner->flags;
++
++exit:
++	if (owner && !kdbus_name_owner_is_used(owner))
++		kdbus_name_owner_free(owner);
++	if (name && !kdbus_name_entry_is_used(name))
++		kdbus_name_entry_free(name);
+ 	up_write(&reg->rwlock);
+ 	kdbus_notify_flush(conn->ep->bus);
+ 	return ret;
+ }
+ 
+-static void kdbus_name_release_unlocked(struct kdbus_name_registry *reg,
+-					struct kdbus_name_entry *e)
++static void kdbus_name_release_unlocked(struct kdbus_name_owner *owner)
+ {
+-	struct kdbus_name_pending *p;
+-
+-	lockdep_assert_held(&reg->rwlock);
+-
+-	p = list_first_entry_or_null(&e->queue, struct kdbus_name_pending,
+-				     name_entry);
+-
+-	if (p) {
+-		/* give it to first active waiter in the queue */
+-		kdbus_name_entry_replace_owner(e, p->conn, p->flags);
+-		kdbus_name_pending_free(p);
+-	} else if (e->activator && e->activator != e->conn) {
+-		/* hand it back to an active activator connection */
+-		kdbus_conn_move_messages(e->activator, e->conn, e->name_id);
+-		kdbus_name_entry_replace_owner(e, e->activator,
+-					       KDBUS_NAME_ACTIVATOR);
+-	} else {
+-		/* release the name */
+-		kdbus_notify_name_change(e->conn->ep->bus,
+-					 KDBUS_ITEM_NAME_REMOVE,
+-					 e->conn->id, 0, e->flags, 0, e->name);
+-		kdbus_name_entry_remove_owner(e);
+-		kdbus_name_entry_free(e);
++	struct kdbus_name_owner *primary, *next;
++	struct kdbus_name_entry *name;
++
++	name = owner->name;
++	primary = kdbus_name_entry_first(name);
++
++	list_del_init(&owner->name_entry);
++	if (owner == name->activator)
++		name->activator = NULL;
++
++	if (!primary || owner == primary) {
++		next = kdbus_name_entry_first(name);
++		if (!next)
++			next = name->activator;
++
++		if (next) {
++			/* hand to next in queue */
++			next->flags &= ~KDBUS_NAME_IN_QUEUE;
++			if (next == name->activator)
++				kdbus_conn_move_messages(next->conn,
++							 owner->conn,
++							 name->name_id);
++
++			kdbus_notify_name_change(owner->conn->ep->bus,
++					KDBUS_ITEM_NAME_CHANGE,
++					owner->conn->id, next->conn->id,
++					owner->flags, next->flags,
++					name->name);
++		} else {
++			kdbus_notify_name_change(owner->conn->ep->bus,
++						 KDBUS_ITEM_NAME_REMOVE,
++						 owner->conn->id, 0,
++						 owner->flags, 0,
++						 name->name);
++		}
+ 	}
++
++	kdbus_name_owner_free(owner);
++	if (!kdbus_name_entry_is_used(name))
++		kdbus_name_entry_free(name);
+ }
+ 
+ static int kdbus_name_release(struct kdbus_name_registry *reg,
+ 			      struct kdbus_conn *conn,
+-			      const char *name)
++			      const char *name_str)
+ {
+-	struct kdbus_name_pending *p;
+-	struct kdbus_name_entry *e;
++	struct kdbus_name_owner *owner;
++	struct kdbus_name_entry *name;
+ 	int ret = 0;
+ 
+ 	down_write(&reg->rwlock);
+-	e = kdbus_name_find(reg, kdbus_strhash(name), name);
+-	if (!e) {
+-		ret = -ESRCH;
+-	} else if (e->conn == conn) {
+-		kdbus_name_release_unlocked(reg, e);
++	name = kdbus_name_entry_find(reg, kdbus_strhash(name_str), name_str);
++	if (name) {
++		owner = kdbus_name_owner_find(name, conn);
++		if (owner)
++			kdbus_name_release_unlocked(owner);
++		else
++			ret = -EADDRINUSE;
+ 	} else {
+-		ret = -EADDRINUSE;
+-		list_for_each_entry(p, &e->queue, name_entry) {
+-			if (p->conn == conn) {
+-				kdbus_name_pending_free(p);
+-				ret = 0;
+-				break;
+-			}
+-		}
++		ret = -ESRCH;
+ 	}
+ 	up_write(&reg->rwlock);
+ 
+@@ -438,33 +488,74 @@ static int kdbus_name_release(struct kdbus_name_registry *reg,
+ void kdbus_name_release_all(struct kdbus_name_registry *reg,
+ 			    struct kdbus_conn *conn)
+ {
+-	struct kdbus_name_pending *p;
+-	struct kdbus_conn *activator = NULL;
+-	struct kdbus_name_entry *e;
++	struct kdbus_name_owner *owner;
+ 
+ 	down_write(&reg->rwlock);
+ 
+-	if (conn->activator_of) {
+-		activator = conn->activator_of->activator;
+-		conn->activator_of->activator = NULL;
+-	}
+-
+-	while ((p = list_first_entry_or_null(&conn->names_queue_list,
+-					     struct kdbus_name_pending,
+-					     conn_entry)))
+-		kdbus_name_pending_free(p);
+-	while ((e = list_first_entry_or_null(&conn->names_list,
+-					     struct kdbus_name_entry,
+-					     conn_entry)))
+-		kdbus_name_release_unlocked(reg, e);
++	while ((owner = list_first_entry_or_null(&conn->names_list,
++						 struct kdbus_name_owner,
++						 conn_entry)))
++		kdbus_name_release_unlocked(owner);
+ 
+ 	up_write(&reg->rwlock);
+ 
+-	kdbus_conn_unref(activator);
+ 	kdbus_notify_flush(conn->ep->bus);
+ }
+ 
+ /**
++ * kdbus_name_is_valid() - check if a name is valid
++ * @p:			The name to check
++ * @allow_wildcard:	Whether or not to allow a wildcard name
++ *
++ * A name is valid if all of the following criterias are met:
++ *
++ *  - The name has two or more elements separated by a period ('.') character.
++ *  - All elements must contain at least one character.
++ *  - Each element must only contain the ASCII characters "[A-Z][a-z][0-9]_-"
++ *    and must not begin with a digit.
++ *  - The name must not exceed KDBUS_NAME_MAX_LEN.
++ *  - If @allow_wildcard is true, the name may end on '.*'
++ */
++bool kdbus_name_is_valid(const char *p, bool allow_wildcard)
++{
++	bool dot, found_dot = false;
++	const char *q;
++
++	for (dot = true, q = p; *q; q++) {
++		if (*q == '.') {
++			if (dot)
++				return false;
++
++			found_dot = true;
++			dot = true;
++		} else {
++			bool good;
++
++			good = isalpha(*q) || (!dot && isdigit(*q)) ||
++				*q == '_' || *q == '-' ||
++				(allow_wildcard && dot &&
++					*q == '*' && *(q + 1) == '\0');
++
++			if (!good)
++				return false;
++
++			dot = false;
++		}
++	}
++
++	if (q - p > KDBUS_NAME_MAX_LEN)
++		return false;
++
++	if (dot)
++		return false;
++
++	if (!found_dot)
++		return false;
++
++	return true;
++}
++
++/**
+  * kdbus_cmd_name_acquire() - handle KDBUS_CMD_NAME_ACQUIRE
+  * @conn:		connection to operate on
+  * @argp:		command payload
+@@ -503,20 +594,9 @@ int kdbus_cmd_name_acquire(struct kdbus_conn *conn, void __user *argp)
+ 		goto exit;
+ 	}
+ 
+-	/*
+-	 * Do atomic_inc_return here to reserve our slot, then decrement
+-	 * it before returning.
+-	 */
+-	if (atomic_inc_return(&conn->name_count) > KDBUS_CONN_MAX_NAMES) {
+-		ret = -E2BIG;
+-		goto exit_dec;
+-	}
+-
+ 	ret = kdbus_name_acquire(conn->ep->bus->name_registry, conn, item_name,
+ 				 cmd->flags, &cmd->return_flags);
+ 
+-exit_dec:
+-	atomic_dec(&conn->name_count);
+ exit:
+ 	return kdbus_args_clear(&args, ret);
+ }
+@@ -559,7 +639,7 @@ static int kdbus_list_write(struct kdbus_conn *conn,
+ 			    struct kdbus_conn *c,
+ 			    struct kdbus_pool_slice *slice,
+ 			    size_t *pos,
+-			    struct kdbus_name_entry *e,
++			    struct kdbus_name_owner *o,
+ 			    bool write)
+ {
+ 	struct kvec kvec[4];
+@@ -580,22 +660,22 @@ static int kdbus_list_write(struct kdbus_conn *conn,
+ 		u64 flags;
+ 	} h = {};
+ 
+-	if (e && !kdbus_conn_policy_see_name_unlocked(conn, current_cred(),
+-						      e->name))
++	if (o && !kdbus_conn_policy_see_name_unlocked(conn, current_cred(),
++						      o->name->name))
+ 		return 0;
+ 
+ 	kdbus_kvec_set(&kvec[cnt++], &info, sizeof(info), &info.size);
+ 
+ 	/* append name */
+-	if (e) {
+-		size_t slen = strlen(e->name) + 1;
++	if (o) {
++		size_t slen = strlen(o->name->name) + 1;
+ 
+ 		h.size = offsetof(struct kdbus_item, name.name) + slen;
+ 		h.type = KDBUS_ITEM_OWNED_NAME;
+-		h.flags = e->flags;
++		h.flags = o->flags;
+ 
+ 		kdbus_kvec_set(&kvec[cnt++], &h, sizeof(h), &info.size);
+-		kdbus_kvec_set(&kvec[cnt++], e->name, slen, &info.size);
++		kdbus_kvec_set(&kvec[cnt++], o->name->name, slen, &info.size);
+ 		cnt += !!kdbus_kvec_pad(&kvec[cnt], &info.size);
+ 	}
+ 
+@@ -625,63 +705,52 @@ static int kdbus_list_all(struct kdbus_conn *conn, u64 flags,
+ 		if (kdbus_conn_is_monitor(c))
+ 			continue;
+ 
+-		/* skip activators */
+-		if (!(flags & KDBUS_LIST_ACTIVATORS) &&
+-		    kdbus_conn_is_activator(c))
+-			continue;
+-
+ 		/* all names the connection owns */
+-		if (flags & (KDBUS_LIST_NAMES | KDBUS_LIST_ACTIVATORS)) {
+-			struct kdbus_name_entry *e;
++		if (flags & (KDBUS_LIST_NAMES |
++			     KDBUS_LIST_ACTIVATORS |
++			     KDBUS_LIST_QUEUED)) {
++			struct kdbus_name_owner *o;
+ 
+-			list_for_each_entry(e, &c->names_list, conn_entry) {
+-				struct kdbus_conn *a = e->activator;
++			list_for_each_entry(o, &c->names_list, conn_entry) {
++				if (o->flags & KDBUS_NAME_ACTIVATOR) {
++					if (!(flags & KDBUS_LIST_ACTIVATORS))
++						continue;
+ 
+-				if ((flags & KDBUS_LIST_ACTIVATORS) &&
+-				    a && a != c) {
+-					ret = kdbus_list_write(conn, a, slice,
+-							       &p, e, write);
++					ret = kdbus_list_write(conn, c, slice,
++							       &p, o, write);
+ 					if (ret < 0) {
+ 						mutex_unlock(&c->lock);
+ 						return ret;
+ 					}
+ 
+ 					added = true;
+-				}
++				} else if (o->flags & KDBUS_NAME_IN_QUEUE) {
++					if (!(flags & KDBUS_LIST_QUEUED))
++						continue;
+ 
+-				if (flags & KDBUS_LIST_NAMES ||
+-				    kdbus_conn_is_activator(c)) {
+ 					ret = kdbus_list_write(conn, c, slice,
+-							       &p, e, write);
++							       &p, o, write);
+ 					if (ret < 0) {
+ 						mutex_unlock(&c->lock);
+ 						return ret;
+ 					}
+ 
+ 					added = true;
+-				}
+-			}
+-		}
++				} else if (flags & KDBUS_LIST_NAMES) {
++					ret = kdbus_list_write(conn, c, slice,
++							       &p, o, write);
++					if (ret < 0) {
++						mutex_unlock(&c->lock);
++						return ret;
++					}
+ 
+-		/* queue of names the connection is currently waiting for */
+-		if (flags & KDBUS_LIST_QUEUED) {
+-			struct kdbus_name_pending *q;
+-
+-			list_for_each_entry(q, &c->names_queue_list,
+-					    conn_entry) {
+-				ret = kdbus_list_write(conn, c, slice, &p,
+-						       q->name, write);
+-				if (ret < 0) {
+-					mutex_unlock(&c->lock);
+-					return ret;
++					added = true;
+ 				}
+-
+-				added = true;
+ 			}
+ 		}
+ 
+ 		/* nothing added so far, just add the unique ID */
+-		if (!added && flags & KDBUS_LIST_UNIQUE) {
++		if (!added && (flags & KDBUS_LIST_UNIQUE)) {
+ 			ret = kdbus_list_write(conn, c, slice, &p, NULL, write);
+ 			if (ret < 0)
+ 				return ret;
+diff --git a/ipc/kdbus/names.h b/ipc/kdbus/names.h
+index 3dd2589293e0..edac59ddd8ee 100644
+--- a/ipc/kdbus/names.h
++++ b/ipc/kdbus/names.h
+@@ -18,6 +18,10 @@
+ #include <linux/hashtable.h>
+ #include <linux/rwsem.h>
+ 
++struct kdbus_name_entry;
++struct kdbus_name_owner;
++struct kdbus_name_registry;
++
+ /**
+  * struct kdbus_name_registry - names registered for a bus
+  * @entries_hash:	Map of entries
+@@ -32,27 +36,37 @@ struct kdbus_name_registry {
+ 
+ /**
+  * struct kdbus_name_entry - well-know name entry
+- * @name_id:		Sequence number of name entry to be able to uniquely
++ * @name_id:		sequence number of name entry to be able to uniquely
+  *			identify a name over its registration lifetime
+- * @flags:		KDBUS_NAME_* flags
+- * @conn:		Connection owning the name
+- * @activator:		Connection of the activator queuing incoming messages
+- * @queue:		List of queued connections
+- * @conn_entry:		Entry in connection
+- * @hentry:		Entry in registry map
+- * @name:		The well-known name
++ * @activator:		activator of this name, or NULL
++ * @queue:		list of queued owners
++ * @hentry:		entry in registry map
++ * @name:		well-known name
+  */
+ struct kdbus_name_entry {
+ 	u64 name_id;
+-	u64 flags;
+-	struct kdbus_conn *conn;
+-	struct kdbus_conn *activator;
++	struct kdbus_name_owner *activator;
+ 	struct list_head queue;
+-	struct list_head conn_entry;
+ 	struct hlist_node hentry;
+ 	char name[];
+ };
+ 
++/**
++ * struct kdbus_name_owner - owner of a well-known name
++ * @flags:		KDBUS_NAME_* flags of this owner
++ * @conn:		connection owning the name
++ * @name:		name that is owned
++ * @conn_entry:		link into @conn
++ * @name_entry:		link into @name
++ */
++struct kdbus_name_owner {
++	u64 flags;
++	struct kdbus_conn *conn;
++	struct kdbus_name_entry *name;
++	struct list_head conn_entry;
++	struct list_head name_entry;
++};
++
+ bool kdbus_name_is_valid(const char *p, bool allow_wildcard);
+ 
+ struct kdbus_name_registry *kdbus_name_registry_new(void);
+@@ -71,4 +85,21 @@ int kdbus_cmd_name_acquire(struct kdbus_conn *conn, void __user *argp);
+ int kdbus_cmd_name_release(struct kdbus_conn *conn, void __user *argp);
+ int kdbus_cmd_list(struct kdbus_conn *conn, void __user *argp);
+ 
++/**
++ * kdbus_name_get_owner() - get current owner of a name
++ * @name:	name to get current owner of
++ *
++ * This returns a pointer to the current owner of a name (or its activator if
++ * there is no owner). The caller must make sure @name is valid and does not
++ * vanish.
++ *
++ * Return: Pointer to current owner or NULL if there is none.
++ */
++static inline struct kdbus_name_owner *
++kdbus_name_get_owner(struct kdbus_name_entry *name)
++{
++	return list_first_entry_or_null(&name->queue, struct kdbus_name_owner,
++					name_entry) ? : name->activator;
++}
++
+ #endif
+-- 
+2.4.3
+
+
+From 0486b859f05aa75d59e2c1a4f62053c1a1151d35 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Fri, 7 Aug 2015 16:36:34 +0200
+Subject: [PATCH 2/4] kdbus: inform caller about exact updates on NAME_ACQUIRE
+
+This adds two new return flags for KDBUS_CMD_NAME_ACQUIRE:
+
+ * The KDBUS_NAME_PRIMARY flag is set for a name if, and only if, the
+   connection is currently the primary owner of a name. It is thus the
+   negation of KDBUS_NAME_IN_QUEUE, but is required to distinguish the
+   case from the situation where the connection is neither queued nor the
+   primary owner of a name.
+   Additionally, this flag is included in name listings and events.
+
+ * The KDBUS_NAME_ACQUIRED flag is exclusively used as return flag for
+   KDBUS_CMD_NAME_ACQUIRE to let the caller know whether _this_ exact
+   call actually queued the connection on the name. If the flag is not
+   set, the connection was either already queued and only the flags were
+   updated, or the connection is not queued at all.
+
+This information was previously available to the caller via error-codes
+from KDBUS_CMD_NAME_ACQUIRE. However, in some situations we actually
+modify kernel state but return an error. This is considered bad style and
+we really need to avoid this. Hence, these two new flags allow us to
+avoid returning errors, but still inform the caller about the exact
+conditions of the execution.
+
+Reviewed-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ include/uapi/linux/kdbus.h |  4 ++++
+ ipc/kdbus/names.c          | 38 ++++++++++++++++++++++++++++----------
+ 2 files changed, 32 insertions(+), 10 deletions(-)
+
+diff --git a/include/uapi/linux/kdbus.h b/include/uapi/linux/kdbus.h
+index ecffc6b13c3e..4fc44cb1d4a8 100644
+--- a/include/uapi/linux/kdbus.h
++++ b/include/uapi/linux/kdbus.h
+@@ -854,6 +854,8 @@ enum kdbus_make_flags {
+  * @KDBUS_NAME_QUEUE:			Name should be queued if busy
+  * @KDBUS_NAME_IN_QUEUE:		Name is queued
+  * @KDBUS_NAME_ACTIVATOR:		Name is owned by a activator connection
++ * @KDBUS_NAME_PRIMARY:			Primary owner of the name
++ * @KDBUS_NAME_ACQUIRED:		Name was acquired/queued _now_
+  */
+ enum kdbus_name_flags {
+ 	KDBUS_NAME_REPLACE_EXISTING	= 1ULL <<  0,
+@@ -861,6 +863,8 @@ enum kdbus_name_flags {
+ 	KDBUS_NAME_QUEUE		= 1ULL <<  2,
+ 	KDBUS_NAME_IN_QUEUE		= 1ULL <<  3,
+ 	KDBUS_NAME_ACTIVATOR		= 1ULL <<  4,
++	KDBUS_NAME_PRIMARY		= 1ULL <<  5,
++	KDBUS_NAME_ACQUIRED		= 1ULL <<  6,
+ };
+ 
+ /**
+diff --git a/ipc/kdbus/names.c b/ipc/kdbus/names.c
+index 7a6e61c35ebf..a47ee5452158 100644
+--- a/ipc/kdbus/names.c
++++ b/ipc/kdbus/names.c
+@@ -211,7 +211,8 @@ kdbus_name_lookup_unlocked(struct kdbus_name_registry *reg, const char *name)
+ 	return kdbus_name_entry_find(reg, kdbus_strhash(name), name);
+ }
+ 
+-static int kdbus_name_become_activator(struct kdbus_name_owner *owner)
++static int kdbus_name_become_activator(struct kdbus_name_owner *owner,
++				       u64 *return_flags)
+ {
+ 	if (kdbus_name_owner_is_used(owner))
+ 		return -EALREADY;
+@@ -221,23 +222,30 @@ static int kdbus_name_become_activator(struct kdbus_name_owner *owner)
+ 	owner->name->activator = owner;
+ 	owner->flags |= KDBUS_NAME_ACTIVATOR;
+ 
+-	if (kdbus_name_entry_first(owner->name))
++	if (kdbus_name_entry_first(owner->name)) {
+ 		owner->flags |= KDBUS_NAME_IN_QUEUE;
+-	else
++	} else {
++		owner->flags |= KDBUS_NAME_PRIMARY;
+ 		kdbus_notify_name_change(owner->conn->ep->bus,
+ 					 KDBUS_ITEM_NAME_ADD,
+ 					 0, owner->conn->id,
+ 					 0, owner->flags,
+ 					 owner->name->name);
++	}
++
++	if (return_flags)
++		*return_flags = owner->flags | KDBUS_NAME_ACQUIRED;
+ 
+ 	return 0;
+ }
+ 
+-static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags)
++static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags,
++			     u64 *return_flags)
+ {
+ 	struct kdbus_name_owner *primary, *activator;
+ 	struct kdbus_name_entry *name;
+ 	struct kdbus_bus *bus;
++	u64 nflags = 0;
+ 	int ret = 0;
+ 
+ 	name = owner->name;
+@@ -259,6 +267,8 @@ static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags)
+ 		 */
+ 
+ 		list_add(&owner->name_entry, &name->queue);
++		owner->flags |= KDBUS_NAME_PRIMARY;
++		nflags |= KDBUS_NAME_ACQUIRED;
+ 
+ 		/* move messages to new owner on activation */
+ 		if (activator) {
+@@ -268,6 +278,7 @@ static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags)
+ 					activator->conn->id, owner->conn->id,
+ 					activator->flags, owner->flags,
+ 					name->name);
++			activator->flags &= ~KDBUS_NAME_PRIMARY;
+ 			activator->flags |= KDBUS_NAME_IN_QUEUE;
+ 		} else {
+ 			kdbus_notify_name_change(bus, KDBUS_ITEM_NAME_ADD,
+@@ -283,6 +294,7 @@ static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags)
+ 		 * For compatibility, we have to return -EALREADY.
+ 		 */
+ 
++		owner->flags |= KDBUS_NAME_PRIMARY;
+ 		ret = -EALREADY;
+ 
+ 	} else if ((primary->flags & KDBUS_NAME_ALLOW_REPLACEMENT) &&
+@@ -295,6 +307,8 @@ static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags)
+ 
+ 		list_del_init(&owner->name_entry);
+ 		list_add(&owner->name_entry, &name->queue);
++		owner->flags |= KDBUS_NAME_PRIMARY;
++		nflags |= KDBUS_NAME_ACQUIRED;
+ 
+ 		kdbus_notify_name_change(bus, KDBUS_ITEM_NAME_CHANGE,
+ 					 primary->conn->id, owner->conn->id,
+@@ -303,6 +317,7 @@ static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags)
+ 
+ 		/* requeue old primary, or drop if queueing not wanted */
+ 		if (primary->flags & KDBUS_NAME_QUEUE) {
++			primary->flags &= ~KDBUS_NAME_PRIMARY;
+ 			primary->flags |= KDBUS_NAME_IN_QUEUE;
+ 		} else {
+ 			list_del_init(&primary->name_entry);
+@@ -317,8 +332,10 @@ static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags)
+ 		 */
+ 
+ 		owner->flags |= KDBUS_NAME_IN_QUEUE;
+-		if (!kdbus_name_owner_is_used(owner))
++		if (!kdbus_name_owner_is_used(owner)) {
+ 			list_add_tail(&owner->name_entry, &name->queue);
++			nflags |= KDBUS_NAME_ACQUIRED;
++		}
+ 	} else if (kdbus_name_owner_is_used(owner)) {
+ 		/*
+ 		 * Already queued on name, but re-queueing was not requested.
+@@ -337,6 +354,9 @@ static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags)
+ 		ret = -EEXIST;
+ 	}
+ 
++	if (return_flags)
++		*return_flags = owner->flags | nflags;
++
+ 	return ret;
+ }
+ 
+@@ -392,15 +412,12 @@ int kdbus_name_acquire(struct kdbus_name_registry *reg,
+ 	}
+ 
+ 	if (flags & KDBUS_NAME_ACTIVATOR)
+-		ret = kdbus_name_become_activator(owner);
++		ret = kdbus_name_become_activator(owner, return_flags);
+ 	else
+-		ret = kdbus_name_update(owner, flags);
++		ret = kdbus_name_update(owner, flags, return_flags);
+ 	if (ret < 0)
+ 		goto exit;
+ 
+-	if (return_flags)
+-		*return_flags = owner->flags;
+-
+ exit:
+ 	if (owner && !kdbus_name_owner_is_used(owner))
+ 		kdbus_name_owner_free(owner);
+@@ -431,6 +448,7 @@ static void kdbus_name_release_unlocked(struct kdbus_name_owner *owner)
+ 		if (next) {
+ 			/* hand to next in queue */
+ 			next->flags &= ~KDBUS_NAME_IN_QUEUE;
++			next->flags |= KDBUS_NAME_PRIMARY;
+ 			if (next == name->activator)
+ 				kdbus_conn_move_messages(next->conn,
+ 							 owner->conn,
+-- 
+2.4.3
+
+
+From 39b055e664cd7dd31a6de860f87f4728b4138590 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Fri, 7 Aug 2015 16:36:35 +0200
+Subject: [PATCH 3/4] kdbus: never return <0 from ioctls if we changed state
+
+If an ioctl() returns <0, user-space should be safe to assume it had no
+effect on the state of any object. This might not be always possible, but
+in kdbus we adhered to this rule. But there's one exception, namely
+KDBUS_CMD_NAME_ACQUIRE. This call used to fail with -EALREADY if we owned
+a name and tried to acquire it again. However, regardless whether the
+name was already owned, the name-flags are updated according to the newly
+provided flags. Hence, we change the state of name-ownership, but might
+still return an error.
+
+This patch changes behavior and now returns 0 in those cases. User-space
+still gets the same information (via return_flags), but will no longer be
+told that the call failed. The tests reflect that and simply check for
+KDBUS_NAME_ACQUIRED in 'return_flags'.
+
+Reviewed-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ ipc/kdbus/names.c                          | 3 ---
+ tools/testing/selftests/kdbus/test-chat.c  | 6 ++++--
+ tools/testing/selftests/kdbus/test-names.c | 4 ----
+ 3 files changed, 4 insertions(+), 9 deletions(-)
+
+diff --git a/ipc/kdbus/names.c b/ipc/kdbus/names.c
+index a47ee5452158..bf44ca3f12b6 100644
+--- a/ipc/kdbus/names.c
++++ b/ipc/kdbus/names.c
+@@ -291,11 +291,9 @@ static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags,
+ 		/*
+ 		 * Already the primary owner of the name, flags were already
+ 		 * updated. Nothing to do.
+-		 * For compatibility, we have to return -EALREADY.
+ 		 */
+ 
+ 		owner->flags |= KDBUS_NAME_PRIMARY;
+-		ret = -EALREADY;
+ 
+ 	} else if ((primary->flags & KDBUS_NAME_ALLOW_REPLACEMENT) &&
+ 		   (flags & KDBUS_NAME_REPLACE_EXISTING)) {
+@@ -344,7 +342,6 @@ static int kdbus_name_update(struct kdbus_name_owner *owner, u64 flags,
+ 		 */
+ 
+ 		list_del_init(&owner->name_entry);
+-		ret = -EEXIST;
+ 	} else {
+ 		/*
+ 		 * Name is already claimed and queueing is not requested.
+diff --git a/tools/testing/selftests/kdbus/test-chat.c b/tools/testing/selftests/kdbus/test-chat.c
+index 71a92d8b7c85..41e5b53fe0cc 100644
+--- a/tools/testing/selftests/kdbus/test-chat.c
++++ b/tools/testing/selftests/kdbus/test-chat.c
+@@ -41,8 +41,10 @@ int kdbus_test_chat(struct kdbus_test_env *env)
+ 	ret = kdbus_name_acquire(conn_a, "foo.bar.double", NULL);
+ 	ASSERT_RETURN(ret == 0);
+ 
+-	ret = kdbus_name_acquire(conn_a, "foo.bar.double", NULL);
+-	ASSERT_RETURN(ret == -EALREADY);
++	flags = 0;
++	ret = kdbus_name_acquire(conn_a, "foo.bar.double", &flags);
++	ASSERT_RETURN(ret == 0);
++	ASSERT_RETURN(!(flags & KDBUS_NAME_ACQUIRED));
+ 
+ 	ret = kdbus_name_release(conn_a, "foo.bar.double");
+ 	ASSERT_RETURN(ret == 0);
+diff --git a/tools/testing/selftests/kdbus/test-names.c b/tools/testing/selftests/kdbus/test-names.c
+index fd4ac5adc6d2..9217465f3ff1 100644
+--- a/tools/testing/selftests/kdbus/test-names.c
++++ b/tools/testing/selftests/kdbus/test-names.c
+@@ -143,10 +143,6 @@ int kdbus_test_name_conflict(struct kdbus_test_env *env)
+ 	ret = conn_is_name_owner(env->conn, name);
+ 	ASSERT_RETURN(ret == 0);
+ 
+-	/* check that we can't acquire it again from the 1st connection */
+-	ret = kdbus_name_acquire(env->conn, name, NULL);
+-	ASSERT_RETURN(ret == -EALREADY);
+-
+ 	/* check that we also can't acquire it again from the 2nd connection */
+ 	ret = kdbus_name_acquire(conn, name, NULL);
+ 	ASSERT_RETURN(ret == -EEXIST);
+-- 
+2.4.3
+
+
+From a36324913ff21d7a0989c52b7208e8d738e17d64 Mon Sep 17 00:00:00 2001
+From: Daniel Mack <daniel@zonque.org>
+Date: Fri, 7 Aug 2015 16:36:36 +0200
+Subject: [PATCH 4/4] kdbus: selftests: add more name registry tests
+
+Add some more code for testing the name registry state. This can now be used
+to track the state of queued names and per-name queing settings.
+
+Also add new tests to check the newly added KDBUS_NAME_PRIMARY and
+KDBUS_NAME_ACQUIRED flags and name takeovers.
+
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ tools/testing/selftests/kdbus/kdbus-test.c |   6 ++
+ tools/testing/selftests/kdbus/kdbus-test.h |   1 +
+ tools/testing/selftests/kdbus/test-names.c | 133 +++++++++++++++++++++++------
+ 3 files changed, 112 insertions(+), 28 deletions(-)
+
+diff --git a/tools/testing/selftests/kdbus/kdbus-test.c b/tools/testing/selftests/kdbus/kdbus-test.c
+index db732e59650a..db57381570fa 100644
+--- a/tools/testing/selftests/kdbus/kdbus-test.c
++++ b/tools/testing/selftests/kdbus/kdbus-test.c
+@@ -118,6 +118,12 @@ static const struct kdbus_test tests[] = {
+ 		.flags	= TEST_CREATE_BUS | TEST_CREATE_CONN,
+ 	},
+ 	{
++		.name	= "name-takeover",
++		.desc	= "takeover of names",
++		.func	= kdbus_test_name_takeover,
++		.flags	= TEST_CREATE_BUS | TEST_CREATE_CONN,
++	},
++	{
+ 		.name	= "message-basic",
+ 		.desc	= "basic message handling",
+ 		.func	= kdbus_test_message_basic,
+diff --git a/tools/testing/selftests/kdbus/kdbus-test.h b/tools/testing/selftests/kdbus/kdbus-test.h
+index a5c6ae81b81b..ee937f9a84dc 100644
+--- a/tools/testing/selftests/kdbus/kdbus-test.h
++++ b/tools/testing/selftests/kdbus/kdbus-test.h
+@@ -72,6 +72,7 @@ int kdbus_test_monitor(struct kdbus_test_env *env);
+ int kdbus_test_name_basic(struct kdbus_test_env *env);
+ int kdbus_test_name_conflict(struct kdbus_test_env *env);
+ int kdbus_test_name_queue(struct kdbus_test_env *env);
++int kdbus_test_name_takeover(struct kdbus_test_env *env);
+ int kdbus_test_policy(struct kdbus_test_env *env);
+ int kdbus_test_policy_ns(struct kdbus_test_env *env);
+ int kdbus_test_policy_priv(struct kdbus_test_env *env);
+diff --git a/tools/testing/selftests/kdbus/test-names.c b/tools/testing/selftests/kdbus/test-names.c
+index 9217465f3ff1..e400dc86a2f5 100644
+--- a/tools/testing/selftests/kdbus/test-names.c
++++ b/tools/testing/selftests/kdbus/test-names.c
+@@ -17,44 +17,68 @@
+ #include "kdbus-enum.h"
+ #include "kdbus-test.h"
+ 
+-static int conn_is_name_owner(const struct kdbus_conn *conn,
+-			      const char *needle)
++struct test_name {
++	const char *name;
++	__u64 owner_id;
++	__u64 flags;
++};
++
++static bool conn_test_names(const struct kdbus_conn *conn,
++			    const struct test_name *tests,
++			    unsigned int n_tests)
+ {
+-	struct kdbus_cmd_list cmd_list = { .size = sizeof(cmd_list) };
++	struct kdbus_cmd_list cmd_list = {};
+ 	struct kdbus_info *name, *list;
+-	bool found = false;
++	unsigned int i;
+ 	int ret;
+ 
+-	cmd_list.flags = KDBUS_LIST_NAMES;
++	cmd_list.size = sizeof(cmd_list);
++	cmd_list.flags = KDBUS_LIST_NAMES |
++			 KDBUS_LIST_ACTIVATORS |
++			 KDBUS_LIST_QUEUED;
+ 
+ 	ret = kdbus_cmd_list(conn->fd, &cmd_list);
+ 	ASSERT_RETURN(ret == 0);
+ 
+ 	list = (struct kdbus_info *)(conn->buf + cmd_list.offset);
+-	KDBUS_FOREACH(name, list, cmd_list.list_size) {
+-		struct kdbus_item *item;
+-		const char *n = NULL;
+ 
+-		KDBUS_ITEM_FOREACH(item, name, items) {
+-			if (item->type == KDBUS_ITEM_OWNED_NAME) {
+-				n = item->name.name;
++	for (i = 0; i < n_tests; i++) {
++		const struct test_name *t = tests + i;
++		bool found = false;
++
++		KDBUS_FOREACH(name, list, cmd_list.list_size) {
++			struct kdbus_item *item;
+ 
+-				if (name->id == conn->id &&
+-				    n && strcmp(needle, n) == 0) {
++			KDBUS_ITEM_FOREACH(item, name, items) {
++				if (item->type != KDBUS_ITEM_OWNED_NAME ||
++				    strcmp(item->name.name, t->name) != 0)
++					continue;
++
++				if (t->owner_id == name->id &&
++				    t->flags == item->name.flags) {
+ 					found = true;
+ 					break;
+ 				}
+ 			}
+ 		}
+ 
+-		if (found)
+-			break;
++		if (!found)
++			return false;
+ 	}
+ 
+-	ret = kdbus_free(conn, cmd_list.offset);
+-	ASSERT_RETURN(ret == 0);
++	return true;
++}
++
++static bool conn_is_name_primary_owner(const struct kdbus_conn *conn,
++				       const char *needle)
++{
++	struct test_name t = {
++		.name = needle,
++		.owner_id = conn->id,
++		.flags = KDBUS_NAME_PRIMARY,
++	};
+ 
+-	return found ? 0 : -1;
++	return conn_test_names(conn, &t, 1);
+ }
+ 
+ int kdbus_test_name_basic(struct kdbus_test_env *env)
+@@ -90,15 +114,15 @@ int kdbus_test_name_basic(struct kdbus_test_env *env)
+ 	ret = kdbus_name_acquire(env->conn, name, NULL);
+ 	ASSERT_RETURN(ret == 0);
+ 
+-	ret = conn_is_name_owner(env->conn, name);
+-	ASSERT_RETURN(ret == 0);
++	ret = conn_is_name_primary_owner(env->conn, name);
++	ASSERT_RETURN(ret == true);
+ 
+ 	/* ... and release it again */
+ 	ret = kdbus_name_release(env->conn, name);
+ 	ASSERT_RETURN(ret == 0);
+ 
+-	ret = conn_is_name_owner(env->conn, name);
+-	ASSERT_RETURN(ret != 0);
++	ret = conn_is_name_primary_owner(env->conn, name);
++	ASSERT_RETURN(ret == false);
+ 
+ 	/* check that we can't release it again */
+ 	ret = kdbus_name_release(env->conn, name);
+@@ -140,8 +164,8 @@ int kdbus_test_name_conflict(struct kdbus_test_env *env)
+ 	ret = kdbus_name_acquire(env->conn, name, NULL);
+ 	ASSERT_RETURN(ret == 0);
+ 
+-	ret = conn_is_name_owner(env->conn, name);
+-	ASSERT_RETURN(ret == 0);
++	ret = conn_is_name_primary_owner(env->conn, name);
++	ASSERT_RETURN(ret == true);
+ 
+ 	/* check that we also can't acquire it again from the 2nd connection */
+ 	ret = kdbus_name_acquire(conn, name, NULL);
+@@ -155,13 +179,14 @@ int kdbus_test_name_conflict(struct kdbus_test_env *env)
+ int kdbus_test_name_queue(struct kdbus_test_env *env)
+ {
+ 	struct kdbus_conn *conn;
++	struct test_name t[2];
+ 	const char *name;
+ 	uint64_t flags;
+ 	int ret;
+ 
+ 	name = "foo.bla.blaz";
+ 
+-	flags = KDBUS_NAME_ALLOW_REPLACEMENT;
++	flags = 0;
+ 
+ 	/* create a 2nd connection */
+ 	conn = kdbus_hello(env->buspath, 0, NULL, 0);
+@@ -172,8 +197,8 @@ int kdbus_test_name_queue(struct kdbus_test_env *env)
+ 	ret = kdbus_name_acquire(env->conn, name, &flags);
+ 	ASSERT_RETURN(ret == 0);
+ 
+-	ret = conn_is_name_owner(env->conn, name);
+-	ASSERT_RETURN(ret == 0);
++	ret = conn_is_name_primary_owner(env->conn, name);
++	ASSERT_RETURN(ret == true);
+ 
+ 	/* queue the 2nd connection as waiting owner */
+ 	flags = KDBUS_NAME_QUEUE;
+@@ -181,14 +206,66 @@ int kdbus_test_name_queue(struct kdbus_test_env *env)
+ 	ASSERT_RETURN(ret == 0);
+ 	ASSERT_RETURN(flags & KDBUS_NAME_IN_QUEUE);
+ 
++	t[0].name = name;
++	t[0].owner_id = env->conn->id;
++	t[0].flags = KDBUS_NAME_PRIMARY;
++	t[1].name = name;
++	t[1].owner_id = conn->id;
++	t[1].flags = KDBUS_NAME_QUEUE | KDBUS_NAME_IN_QUEUE;
++	ret = conn_test_names(conn, t, 2);
++	ASSERT_RETURN(ret == true);
++
+ 	/* release name from 1st connection */
+ 	ret = kdbus_name_release(env->conn, name);
+ 	ASSERT_RETURN(ret == 0);
+ 
+ 	/* now the name should be owned by the 2nd connection */
+-	ret = conn_is_name_owner(conn, name);
++	t[0].name = name;
++	t[0].owner_id = conn->id;
++	t[0].flags = KDBUS_NAME_PRIMARY | KDBUS_NAME_QUEUE;
++	ret = conn_test_names(conn, t, 1);
++	ASSERT_RETURN(ret == true);
++
++	kdbus_conn_free(conn);
++
++	return TEST_OK;
++}
++
++int kdbus_test_name_takeover(struct kdbus_test_env *env)
++{
++	struct kdbus_conn *conn;
++	struct test_name t;
++	const char *name;
++	uint64_t flags;
++	int ret;
++
++	name = "foo.bla.blaz";
++
++	flags = KDBUS_NAME_ALLOW_REPLACEMENT;
++
++	/* create a 2nd connection */
++	conn = kdbus_hello(env->buspath, 0, NULL, 0);
++	ASSERT_RETURN(conn != NULL);
++
++	/* acquire name for 1st connection */
++	ret = kdbus_name_acquire(env->conn, name, &flags);
+ 	ASSERT_RETURN(ret == 0);
+ 
++	t.name = name;
++	t.owner_id = env->conn->id;
++	t.flags = KDBUS_NAME_ALLOW_REPLACEMENT | KDBUS_NAME_PRIMARY;
++	ret = conn_test_names(conn, &t, 1);
++	ASSERT_RETURN(ret == true);
++
++	/* now steal name with 2nd connection */
++	flags = KDBUS_NAME_REPLACE_EXISTING;
++	ret = kdbus_name_acquire(conn, name, &flags);
++	ASSERT_RETURN(ret == 0);
++	ASSERT_RETURN(flags & KDBUS_NAME_ACQUIRED);
++
++	ret = conn_is_name_primary_owner(conn, name);
++	ASSERT_RETURN(ret == true);
++
+ 	kdbus_conn_free(conn);
+ 
+ 	return TEST_OK;
+-- 
+2.4.3
+

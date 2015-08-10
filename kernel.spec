@@ -40,7 +40,6 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-
 %global baserelease 990
 %global fedora_build %{baserelease}
 
@@ -66,7 +65,7 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 5
+%define rcrev 6
 # The git snapshot level
 %define gitrev 0
 # Set rpm version accordingly
@@ -583,10 +582,10 @@ Patch502: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 
 Patch503: drm-i915-turn-off-wc-mmaps.patch
 
-Patch505: 0001-dm-fix-dm_merge_bvec-regression-on-32-bit-systems.patch
+#rhbz 1244511
+Patch507: HID-chicony-Add-support-for-Acer-Aspire-Switch-12.patch
 
-# CVE-2015-5697 (rhbz 1249011 1249013)
-Patch506: md-use-kzalloc-when-bitmap-is-disabled.patch
+Patch508: kexec-uefi-copy-secure_boot-flag-in-boot-params.patch
 
 Patch904: kdbus.patch
 
@@ -2030,6 +2029,27 @@ fi
 #
 # 
 %changelog
+* Sun Aug 09 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc6.git0.1
+- Linux v4.2-rc6
+
+* Fri Aug 07 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc5.git3.1
+- Linux v4.2-rc5-78-g49d7c6559bf2
+
+* Wed Aug 05 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc5.git2.1
+- Linux v4.2-rc5-42-g4e6b6ee253ce
+
+* Tue Aug 04 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Patch from Nicholas Kudriavtsev for Acer Switch 12 Fn keys (rhbz 1244511)
+
+* Tue Aug 04 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc5.git1.1
+- Linux v4.2-rc5-19-gc2f3ba745d1c
+
+* Tue Aug 04 2015 Hans de Goede <hdegoede@redhat.com>
+- Always enable mmiotrace when building x86 kernels
+
+* Tue Aug 04 2015 Hans de Goede <hdegoede@redhat.com>
+- Move joydev.ko from kernel-modules-extra to kernel-modules
+
 * Mon Aug 03 2015 Josh Boyer <jwboyer@fedoraproject.org>
 - Fix i386 boot bug correctly (rhbz 1247382)
 - CVE-2015-5697 info leak in md driver (rhbz 1249011 1249013)
