@@ -652,6 +652,12 @@ Patch507: HID-chicony-Add-support-for-Acer-Aspire-Switch-12.patch
 # and probably more since ugh use after free bugs
 Patch26265: HID-hid-input-Fix-accessing-freed-memory-during-devi.patch
 
+#rhbz 1239050
+Patch509: ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
+
+#rhbz 1253789
+Patch511: iSCSI-let-session-recovery_tmo-sysfs-writes-persist.patch
+
 # Surface Pro 3
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -1413,6 +1419,12 @@ ApplyPatch HID-chicony-Add-support-for-Acer-Aspire-Switch-12.patch
 
 #rhbz 1251877 1251880 1250279 1248741
 ApplyPatch HID-hid-input-Fix-accessing-freed-memory-during-devi.patch
+
+#rhbz 1239050
+ApplyPatch ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
+
+#rhbz 1253789
+ApplyPatch iSCSI-let-session-recovery_tmo-sysfs-writes-persist.patch
 
 # Surface Pro 3
 ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -2278,6 +2290,15 @@ fi
 #                                    ||----w |
 #                                    ||     ||
 %changelog
+* Mon Aug 17 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix iscsi issue (rhbz 1253789)
+
+* Sat Aug 15 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Patch from Hans de Goede to add yoga 3 rfkill quirk (rhbz 1239050)
+
+* Tue Aug 11 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Drop UACCESS_WITH_MEMCPY on ARMv7 as it's broken (rhbz 1250613)
+
 * Mon Aug 10 2015 Laura Abbott <labbott@fedoraproject.org> - 4.1.5-100
 - Linux v4.1.5
 
