@@ -644,7 +644,7 @@ Patch511: iSCSI-let-session-recovery_tmo-sysfs-writes-persist.patch
 # Surface Pro 3
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
-Patch9999: Add-support-driver-for-Surface-Pro-3-buttons.patch
+Patch9999: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
 
 # END OF PATCH DEFINITIONS
 
@@ -1395,7 +1395,7 @@ ApplyPatch iSCSI-let-session-recovery_tmo-sysfs-writes-persist.patch
 # Surface Pro 3
 ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
 ApplyPatch Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
-ApplyPatch Add-support-driver-for-Surface-Pro-3-buttons.patch
+ApplyPatch surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
 
 # END OF PATCH APPLICATIONS
 
