@@ -67,7 +67,7 @@ Summary: The Linux kernel
 # The rc snapshot level
 %define rcrev 7
 # The git snapshot level
-%define gitrev 1
+%define gitrev 4
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -592,6 +592,9 @@ Patch509: ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
 
 #rhbz 1253789
 Patch510: iSCSI-let-session-recovery_tmo-sysfs-writes-persist.patch
+
+#rhbz 1250717
+Patch512: ext4-dont-manipulate-recovery-flag-when-freezing.patch
 
 Patch904: kdbus.patch
 
@@ -2035,6 +2038,24 @@ fi
 #
 # 
 %changelog
+* Fri Aug 21 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Disable EFI_VARS (rhbz 1252137)
+
+* Fri Aug 21 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc7.git4.1
+- Linux v4.2-rc7-100-ge45fc85a2f37
+
+* Fri Aug 21 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc7.git3.1
+- Linux v4.2-rc7-71-g0bad90985d39
+
+* Fri Aug 21 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Minor config updates for ARMv7
+
+* Thu Aug 20 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix incorrect ext4 freezing behavior on non-journaled fs (rhbz 1250717)
+
+* Wed Aug 19 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc7.git2.1
+- Linux v4.2-rc7-24-g1b647a166f07
+
 * Tue Aug 18 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-0.rc7.git1.1
 - Linux v4.2-rc7-15-gbf6740281ed5
 
