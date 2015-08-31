@@ -644,6 +644,25 @@ Patch511: iSCSI-let-session-recovery_tmo-sysfs-writes-persist.patch
 #rhbz 1250717
 Patch512: ext4-dont-manipulate-recovery-flag-when-freezing.patch
 
+#CVE-2015-6666 rhbz 1256746 1256753
+Patch513: Revert-sched-x86_64-Don-t-save-flags-on-context-swit.patch
+
+#rhbz 1256281
+Patch26266: mmc-sdhci-fix-dma-memory-leak-in-sdhci_pre_req.patch
+
+#rhbz 1224764
+Patch26267: x86-apic-Fix-fallout-from-x2apic-cleanup.patch
+
+#rhbz 1257534
+Patch515: nv46-Change-mc-subdev-oclass-from-nv44-to-nv4c.patch
+
+#rhbz 1212201
+Patch514: drm-qxl-validate-monitors-config-modes.patch
+
+#rhbz 1257500
+Patch517: vmwgfx-Rework-device-initialization.patch
+Patch518: drm-vmwgfx-Allow-dropped-masters-render-node-like-ac.patch
+
 # Surface Pro 3
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -1397,6 +1416,25 @@ ApplyPatch iSCSI-let-session-recovery_tmo-sysfs-writes-persist.patch
 
 #rhbz 1250717
 ApplyPatch ext4-dont-manipulate-recovery-flag-when-freezing.patch
+
+#CVE-2015-6666 rhbz 1256746 1256753
+ApplyPatch Revert-sched-x86_64-Don-t-save-flags-on-context-swit.patch
+
+#rhbz 1256281
+ApplyPatch mmc-sdhci-fix-dma-memory-leak-in-sdhci_pre_req.patch
+
+#rhbz 1224764
+ApplyPatch x86-apic-Fix-fallout-from-x2apic-cleanup.patch
+
+#rhbz 1257534
+ApplyPatch nv46-Change-mc-subdev-oclass-from-nv44-to-nv4c.patch
+
+#rhbz 1212201
+ApplyPatch drm-qxl-validate-monitors-config-modes.patch
+
+#rhbz 1257500
+ApplyPatch vmwgfx-Rework-device-initialization.patch
+ApplyPatch drm-vmwgfx-Allow-dropped-masters-render-node-like-ac.patch
 
 # Surface Pro 3
 ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -2262,6 +2300,26 @@ fi
 #                                    ||----w |
 #                                    ||     ||
 %changelog
+* Thu Aug 27 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix vmware driver issues from Thomas Hellström (rhbz 1227193)
+- Add patch from Hans de Goede to fix nv46 based cards (rhbz 1257534)
+- Add patch from Jonathon Jongsma to fix modes in qxl (rhbz 1212201)
+
+* Wed Aug 26 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Disable CRYPTO_DEV_VMX_ENCRYPT on PPC for now to fix Power 8 boot (rhbz 1237089)
+
+* Tue Aug 25 2015 Laura Abbott <labbott@fedoraproject.org>
+- Fix x2apic refactoring breakage (rhbz 1224764)
+
+* Tue Aug 25 2015 Laura Abbott <labbott@fedoraproject.org>
+- Correct the sdhci DMA leak patch to actually compile (oops)
+
+* Tue Aug 25 2015 Laura Abbott <labbott@fedoraproject.org>
+- Fix DMA leak from sdhci (rhbz 1256281)
+
+* Tue Aug 25 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-6666 x86_64 NT flag handling DoS (rhbz 1256746 1256753)
+
 * Fri Aug 21 2015 Josh Boyer <jwboyer@fedoraproject.org>
 - Disable EFI_VARS (rhbz 1252137)
 
