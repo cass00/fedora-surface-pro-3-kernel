@@ -606,6 +606,12 @@ Patch514: drm-qxl-validate-monitors-config-modes.patch
 Patch517: vmwgfx-Rework-device-initialization.patch
 Patch518: drm-vmwgfx-Allow-dropped-masters-render-node-like-ac.patch
 
+#rhbz 1259231
+Patch519: make-flush-workqueue-available-to-non-GPL-modules.patch
+
+#rhbz 1237136
+Patch522: block-blkg_destroy_all-should-clear-q-root_blkg-and-.patch
+
 # Surface Pro 3 support
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -633,7 +639,7 @@ Provides: kernel-drm-nouveau = 16\
 Provides: kernel-uname-r = %{KVERREL}%{?variant}%{?1:+%{1}}\
 Requires(pre): %{kernel_prereq}\
 Requires(pre): %{initrd_prereq}\
-Requires(pre): linux-firmware >= 20130724-29.git31f6b30\
+Requires(pre): linux-firmware >= 20150904-56.git6ebf5d57\
 Requires(preun): systemd >= 200\
 Conflicts: xorg-x11-drv-vmmouse < 13.0.99\
 %{expand:%%{?kernel%{?1:_%{1}}_conflicts:Conflicts: %%{kernel%{?1:_%{1}}_conflicts}}}\
@@ -2055,6 +2061,15 @@ fi
 #
 # 
 %changelog
+* Tue Sep 08 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix oops in blk layer (rhbz 1237136)
+
+* Fri Sep 04 2015 Justin M. Forbes <jforbes@fedoraproject.org> - 4.2.0-300
+- Bump linux-firmware require for amdgpu (rhbz 1259542)
+
+* Wed Sep 02 2015 Justin M. Forbes <jforbes@fedoraproject.org>
+- Make flush_workqueue() available again to non GPL modules (rhbz 1259231)
+
 * Mon Aug 31 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.2.0-1
 - Linux v4.2
 
