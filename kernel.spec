@@ -1802,10 +1802,10 @@ rm -rf $RPM_BUILD_ROOT
 ###
 
 %if %{with_tools}
-%post -n kernel-tools
+%post -n kernel-tools-libs
 /sbin/ldconfig
 
-%postun -n kernel-tools
+%postun -n kernel-tools-libs
 /sbin/ldconfig
 %endif
 
@@ -2061,6 +2061,9 @@ fi
 #
 # 
 %changelog
+* Wed Sep  9 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Minor ARMv7/aarch64 config updates
+
 * Tue Sep 08 2015 Josh Boyer <jwboyer@fedoraproject.org>
 - Fix oops in blk layer (rhbz 1237136)
 
