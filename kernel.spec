@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 0
+%define rcrev 1
 # The git snapshot level
-%define gitrev 11
+%define gitrev 0
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -122,7 +122,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 0
+%define debugbuildsenabled 1
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -512,8 +512,6 @@ Patch467: die-floppy-die.patch
 
 Patch468: no-pcspkr-modalias.patch
 
-Patch469: input-silence-i8042-noise.patch
-
 Patch470: silence-fbcon-logo.patch
 
 Patch471: Kbuild-Add-an-option-to-enable-GCC-VTA.patch
@@ -586,9 +584,6 @@ Patch508: kexec-uefi-copy-secure_boot-flag-in-boot-params.patch
 
 #rhbz 1239050
 Patch509: ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
-
-#rhbz 1212201
-Patch514: drm-qxl-validate-monitors-config-modes.patch
 
 Patch519: security-device_cgroup-fix-RCU-lockdep-splat.patch
 Patch520: ARM-dts-Fix-Makefile-target-for-sun4i-a10-itead-itea.patch
@@ -1788,10 +1783,10 @@ rm -rf $RPM_BUILD_ROOT
 ###
 
 %if %{with_tools}
-%post -n kernel-tools
+%post -n kernel-tools-libs
 /sbin/ldconfig
 
-%postun -n kernel-tools
+%postun -n kernel-tools-libs
 /sbin/ldconfig
 %endif
 
@@ -2048,6 +2043,22 @@ fi
 #
 # 
 %changelog
+* Mon Sep 14 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.3.0-0.rc1.git0.1
+- Linux v4.3-rc1
+- Disable debugging options.
+
+* Mon Sep 14 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- ARMv7 update for AllWinner devices
+
+* Fri Sep 11 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.3.0-0.rc0.git14.1
+- Linux v4.2-11169-g64d1def7d338
+
+* Fri Sep 11 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.3.0-0.rc0.git13.1
+- Linux v4.2-11142-gb0a1ea51bda4
+
+* Fri Sep 11 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.3.0-0.rc0.git12.1
+- Linux v4.2-10963-g519f526d391b
+
 * Wed Sep 09 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.3.0-0.rc0.git11.1
 - Linux v4.2-10774-g26d2177e977c
 
