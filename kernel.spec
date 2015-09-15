@@ -612,6 +612,9 @@ Patch519: make-flush-workqueue-available-to-non-GPL-modules.patch
 #rhbz 1237136
 Patch522: block-blkg_destroy_all-should-clear-q-root_blkg-and-.patch
 
+#CVE-2015-6937 rhbz 1263139 1263140
+Patch523: RDS-verify-the-underlying-transport-exists-before-cr.patch
+
 # Surface Pro 3 support
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -2061,6 +2064,9 @@ fi
 #
 # 
 %changelog
+* Tue Sep 15 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-6937 net: rds null pointer (rhbz 1263139 1263140)
+
 * Wed Sep  9 2015 Peter Robinson <pbrobinson@fedoraproject.org>
 - Minor ARMv7/aarch64 config updates
 
