@@ -40,7 +40,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 993
+%global baserelease 990
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -52,7 +52,7 @@ Summary: The Linux kernel
 %if 0%{?released_kernel}
 
 # Do we have a -stable update to apply?
-%define stable_update 6
+%define stable_update 7
 # Set rpm version accordingly
 %if 0%{?stable_update}
 %define stablerev %{stable_update}
@@ -625,10 +625,6 @@ Patch26252: pcmcia-fix-a-boot-time-warning-in-pcmcia-cs-code.patch
 #rhbz 1244511
 Patch507: HID-chicony-Add-support-for-Acer-Aspire-Switch-12.patch
 
-#rhbz 1251877 1251880 1250279 1248741
-# and probably more since ugh use after free bugs
-Patch26264: HID-hid-input-Fix-accessing-freed-memory-during-devi.patch
-
 #rhbz 1239050
 Patch509: ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
 
@@ -644,9 +640,6 @@ Patch513: Revert-sched-x86_64-Don-t-save-flags-on-context-swit.patch
 #rhbz 1256281
 Patch26265: mmc-sdhci-fix-dma-memory-leak-in-sdhci_pre_req.patch
 
-#rhbz 1224764
-Patch26266: x86-apic-Fix-fallout-from-x2apic-cleanup.patch
-
 #rhbz 1257534
 Patch515: nv46-Change-mc-subdev-oclass-from-nv44-to-nv4c.patch
 
@@ -656,6 +649,9 @@ Patch514: drm-qxl-validate-monitors-config-modes.patch
 #rhbz 1257500
 Patch517: vmwgfx-Rework-device-initialization.patch
 Patch518: drm-vmwgfx-Allow-dropped-masters-render-node-like-ac.patch
+
+#CVE-2015-6937 rhbz 1263139 1263140
+Patch523: RDS-verify-the-underlying-transport-exists-before-cr.patch
 
 # Surface Pro 3
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -1405,9 +1401,6 @@ ApplyPatch pcmcia-fix-a-boot-time-warning-in-pcmcia-cs-code.patch
 #rhbz 1244511
 ApplyPatch HID-chicony-Add-support-for-Acer-Aspire-Switch-12.patch
 
-#rhbz 1251877 1251880 1250279 1248741
-ApplyPatch HID-hid-input-Fix-accessing-freed-memory-during-devi.patch
-
 #rhbz 1239050
 ApplyPatch ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
 
@@ -1423,9 +1416,6 @@ ApplyPatch Revert-sched-x86_64-Don-t-save-flags-on-context-swit.patch
 #rhbz 1256281
 ApplyPatch mmc-sdhci-fix-dma-memory-leak-in-sdhci_pre_req.patch
 
-#rhbz 1224764
-ApplyPatch x86-apic-Fix-fallout-from-x2apic-cleanup.patch
-
 #rhbz 1257534
 ApplyPatch nv46-Change-mc-subdev-oclass-from-nv44-to-nv4c.patch
 
@@ -1435,6 +1425,9 @@ ApplyPatch drm-qxl-validate-monitors-config-modes.patch
 #rhbz 1257500
 ApplyPatch vmwgfx-Rework-device-initialization.patch
 ApplyPatch drm-vmwgfx-Allow-dropped-masters-render-node-like-ac.patch
+
+#CVE-2015-6937 rhbz 1263139 1263140
+ApplyPatch RDS-verify-the-underlying-transport-exists-before-cr.patch
 
 # Surface Pro 3
 ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -2291,6 +2284,12 @@ fi
 #
 # 
 %changelog
+* Tue Sep 15 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-6937 net: rds null pointer (rhbz 1263139 1263140)
+
+* Mon Sep 14 2015 Laura Abbott <labbott@redhat.com> - 4.1.7-200
+- Linux v4.1.7
+
 * Fri Sep 04 2015 Laura Abbott <labbott@redhat.com> - 4.1.6-201
 - Tag and build
 
