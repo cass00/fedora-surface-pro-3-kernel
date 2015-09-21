@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 1
+%define rcrev 2
 # The git snapshot level
-%define gitrev 1
+%define gitrev 0
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -122,7 +122,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 0
+%define debugbuildsenabled 1
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -585,16 +585,12 @@ Patch508: kexec-uefi-copy-secure_boot-flag-in-boot-params.patch
 #rhbz 1239050
 Patch509: ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
 
-Patch519: security-device_cgroup-fix-RCU-lockdep-splat.patch
 Patch520: ARM-dts-Fix-Makefile-target-for-sun4i-a10-itead-itea.patch
 
-#rhbz 1258223
-Patch521: x86-alternatives-Make-optimize_nops-interrupt-safe-a.patch
-
-#rhbz 1237136
-Patch522: block-blkg_destroy_all-should-clear-q-root_blkg-and-.patch
-
 Patch904: kdbus.patch
+
+#rhbz 1263762
+Patch526: 0001-x86-cpu-cacheinfo-Fix-teardown-path.patch
 
 #Surface Pro 3
 Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -2043,6 +2039,22 @@ fi
 #
 # 
 %changelog
+* Mon Sep 21 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc2.git0.2
+- Linux v4.3-rc2
+- Disable debugging options.
+
+* Fri Sep 18 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc1.git4.1
+- Linux v4.3-rc1-131-ga7d5c18
+
+* Fri Sep 18 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix oops in 32-bit kernel on 64-bit AMD cpus (rhbz 1263762)
+
+* Thu Sep 17 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc1.git3.1
+- Linux v4.3-rc1-47-g7271484
+
+* Wed Sep 16 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc1.git2.1
+- Linux v4.3-rc1-21-g865ca08
+
 * Tue Sep 15 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.3.0-0.rc1.git1.1
 - Linux v4.3-rc1-19-gd25ed277fbd4
 
