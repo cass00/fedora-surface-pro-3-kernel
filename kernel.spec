@@ -67,7 +67,7 @@ Summary: The Linux kernel
 # The rc snapshot level
 %define rcrev 2
 # The git snapshot level
-%define gitrev 0
+%define gitrev 1
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -122,7 +122,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 1
+%define debugbuildsenabled 0
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -587,10 +587,13 @@ Patch509: ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
 
 Patch520: ARM-dts-Fix-Makefile-target-for-sun4i-a10-itead-itea.patch
 
-Patch904: kdbus.patch
-
 #rhbz 1263762
 Patch526: 0001-x86-cpu-cacheinfo-Fix-teardown-path.patch
+
+#CVE-2015-5257 rhbz 1265607 1265612
+Patch527: USB-whiteheat-fix-potential-null-deref-at-probe.patch
+
+Patch904: kdbus.patch
 
 #Surface Pro 3
 Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -2039,6 +2042,13 @@ fi
 #
 # 
 %changelog
+* Thu Sep 24 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-5257 Null ptr deref in usb whiteheat driver (rhbz 1265607 1265612)
+
+* Tue Sep 22 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc2.git1.1
+- Linux v4.3-rc2-19-gbcee19f
+- Reenable debugging options.
+
 * Mon Sep 21 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc2.git0.2
 - Linux v4.3-rc2
 - Disable debugging options.
