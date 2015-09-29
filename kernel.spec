@@ -65,7 +65,7 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 2
+%define rcrev 3
 # The git snapshot level
 %define gitrev 1
 # Set rpm version accordingly
@@ -122,7 +122,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 0
+%define debugbuildsenabled 1
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -587,11 +587,8 @@ Patch509: ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
 
 Patch520: ARM-dts-Fix-Makefile-target-for-sun4i-a10-itead-itea.patch
 
-#rhbz 1263762
-Patch526: 0001-x86-cpu-cacheinfo-Fix-teardown-path.patch
-
-#CVE-2015-5257 rhbz 1265607 1265612
-Patch527: USB-whiteheat-fix-potential-null-deref-at-probe.patch
+#rhbz 1262434
+Patch521: Revert-Input-synaptics-fix-handling-of-disabling-ges.patch
 
 Patch904: kdbus.patch
 
@@ -2042,6 +2039,19 @@ fi
 #
 # 
 %changelog
+* Tue Sep 29 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Revert upstream guesture disabling patch on synaptics (rhbz 1262434)
+
+* Mon Sep 28 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc3.git1.1
+- Linux v4.3-rc3-40-g097f70b
+- Disable debugging options.
+
+* Mon Sep 28 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc3.git0.1
+- Linux v4.3-rc3
+
+* Mon Sep 28 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Minor ARMv7 updates
+
 * Thu Sep 24 2015 Josh Boyer <jwboyer@fedoraproject.org>
 - CVE-2015-5257 Null ptr deref in usb whiteheat driver (rhbz 1265607 1265612)
 
