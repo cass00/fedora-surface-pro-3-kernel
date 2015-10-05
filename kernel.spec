@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 3
+%define rcrev 4
 # The git snapshot level
-%define gitrev 3
+%define gitrev 0
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -122,7 +122,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 0
+%define debugbuildsenabled 1
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -504,6 +504,8 @@ Patch456: arm64-acpi-drop-expert-patch.patch
 
 Patch457: ARM-tegra-usb-no-reset.patch
 
+Patch458: ARM-dts-Add-am335x-bonegreen.patch
+
 Patch463: arm-i.MX6-Utilite-device-dtb.patch
 
 Patch466: input-kill-stupid-messages.patch
@@ -587,8 +589,9 @@ Patch509: ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
 
 Patch520: ARM-dts-Fix-Makefile-target-for-sun4i-a10-itead-itea.patch
 
-#rhbz 1262434
-Patch521: Revert-Input-synaptics-fix-handling-of-disabling-ges.patch
+#rhbz 1238803 1249850
+Patch522: drm-qxl-avoid-buffer-reservation-in-qxl_crtc_page_fl.patch
+Patch523: drm-qxl-avoid-dependency-lock.patch
 
 Patch904: kdbus.patch
 
@@ -2039,6 +2042,19 @@ fi
 #
 # 
 %changelog
+* Mon Oct 05 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc4.git0.1
+- Linux v4.3-rc4
+- Disable debugging options.
+
+* Mon Oct 05 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Add patches to fix qxl locking issues (rhbz 1238803 1249850)
+
+* Sun Oct  4 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Add support for BeagleBone Green
+
+* Fri Oct 02 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc3.git4.1
+- Linux v4.3-rc3-145-g36f8daf
+
 * Thu Oct 01 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc3.git3.1
 - Linux v4.3-rc3-65-gf97b870
 
