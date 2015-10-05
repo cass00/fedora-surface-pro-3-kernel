@@ -52,7 +52,7 @@ Summary: The Linux kernel
 %if 0%{?released_kernel}
 
 # Do we have a -stable update to apply?
-%define stable_update 9
+%define stable_update 10
 # Set rpm version accordingly
 %if 0%{?stable_update}
 %define stablerev %{stable_update}
@@ -652,6 +652,24 @@ Patch526: 0001-x86-cpu-cacheinfo-Fix-teardown-path.patch
 
 #CVE-2015-5257 rhbz 1265607 1265612
 Patch527: USB-whiteheat-fix-potential-null-deref-at-probe.patch
+
+#CVE-2015-2925 rhbz 1209367 1209373
+Patch528: dcache-Handle-escaped-paths-in-prepend_path.patch
+Patch529: vfs-Test-for-and-handle-paths-that-are-unreachable-f.patch
+
+#CVE-2015-7613 rhbz 1268270 1268273
+Patch532: Initialize-msg-shm-IPC-objects-before-doing-ipc_addi.patch
+
+#rhbz 1266691
+Patch534: inet-fix-potential-deadlock-in-reqsk_queue_unlink.patch
+Patch535: inet-fix-race-in-reqsk_queue_unlink.patch
+
+#rhbz 1265978
+Patch536: si2168-Bounds-check-firmware.patch
+Patch537: si2157-Bounds-check-firmware.patch
+
+#rhbz 1268037
+Patch538: ALSA-hda-Add-dock-support-for-ThinkPad-T550.patch
 
 # Surface Pro 3
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -1428,6 +1446,24 @@ ApplyPatch 0001-x86-cpu-cacheinfo-Fix-teardown-path.patch
 
 #CVE-2015-5257 rhbz 1265607 1265612
 ApplyPatch USB-whiteheat-fix-potential-null-deref-at-probe.patch
+
+#CVE-2015-2925 rhbz 1209367 1209373
+ApplyPatch dcache-Handle-escaped-paths-in-prepend_path.patch
+ApplyPatch vfs-Test-for-and-handle-paths-that-are-unreachable-f.patch
+
+#CVE-2015-7613 rhbz 1268270 1268273
+ApplyPatch Initialize-msg-shm-IPC-objects-before-doing-ipc_addi.patch
+
+#rhbz 1266691
+ApplyPatch inet-fix-potential-deadlock-in-reqsk_queue_unlink.patch
+ApplyPatch inet-fix-race-in-reqsk_queue_unlink.patch
+
+#rhbz 1265978
+ApplyPatch si2168-Bounds-check-firmware.patch
+ApplyPatch si2157-Bounds-check-firmware.patch
+
+#rhbz 1268037
+ApplyPatch ALSA-hda-Add-dock-support-for-ThinkPad-T550.patch
 
 # Surface Pro 3
 ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -2284,6 +2320,22 @@ fi
 #
 # 
 %changelog
+* Mon Oct 05 2015 Laura Abbott <labbott@fedoraproject.org>
+- Make headphone work with with T550 + Dock (rhbz 1268037)
+
+* Mon Oct 05 2015 Laura Abbott <labbott@fedoraproject.org>
+- Stop stack smash for several DVB devices (rhbz 1265978)
+
+* Mon Oct 05 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.10-200
+- Linxu v4.1.10
+- Add patch to fix soft lockups in network stack (rhbz 1266691)
+
+* Fri Oct 02 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-7613 Unauthorized access to IPC via SysV shm (rhbz 1268270 1268273)
+
+* Thu Oct 01 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-2925 Don't allow bind mount escape (rhbz 1209367 1209373)
+
 * Tue Sep 29 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.9-200
 - Linux v4.1.9
 
