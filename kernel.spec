@@ -52,7 +52,7 @@ Summary: The Linux kernel
 %if 0%{?released_kernel}
 
 # Do we have a -stable update to apply?
-%define stable_update 2
+%define stable_update 3
 # Set rpm version accordingly
 %if 0%{?stable_update}
 %define stablerev %{stable_update}
@@ -506,6 +506,10 @@ Patch457: ARM-tegra-usb-no-reset.patch
 
 Patch458: regulator-axp20x-module-alias.patch
 
+Patch459: regulator-anatop-module-alias.patch
+
+Patch460: ARM-dts-Add-am335x-bonegreen.patch
+
 Patch463: arm-i.MX6-Utilite-device-dtb.patch
 
 Patch466: input-kill-stupid-messages.patch
@@ -613,6 +617,22 @@ Patch526: 0001-x86-cpu-cacheinfo-Fix-teardown-path.patch
 
 #CVE-2015-5257 rhbz 1265607 1265612
 Patch527: USB-whiteheat-fix-potential-null-deref-at-probe.patch
+
+#CVE-2015-2925 rhbz 1209367 1209373
+Patch528: dcache-Handle-escaped-paths-in-prepend_path.patch
+Patch529: vfs-Test-for-and-handle-paths-that-are-unreachable-f.patch
+
+#CVE-2015-7613 rhbz 1268270 1268273
+Patch530: Initialize-msg-shm-IPC-objects-before-doing-ipc_addi.patch
+
+Patch531: net-inet-fix-race-in-reqsk_queue_unlink.patch
+
+#rhbz 1265978
+Patch536: si2168-Bounds-check-firmware.patch
+Patch537: si2157-Bounds-check-firmware.patch
+
+#rhbz 1268037
+Patch538: ALSA-hda-Add-dock-support-for-ThinkPad-T550.patch
 
 # Surface Pro 3 support
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -2063,6 +2083,26 @@ fi
 #
 # 
 %changelog
+* Mon Oct 05 2015 Laura Abbott <labbott@fedoraproject.org>
+- Make headphone work with with T550 + Dock (rhbz 1268037)
+
+* Mon Oct 05 2015 Laura Abbott <labbott@fedoraproject.org>
+- Stop stack smash for several DVB devices (rhbz 1265978)
+
+* Mon Oct 05 2015 Justin M. Forbes <jforbes@fedoraproject.org> - 4.2.3-300
+- Linux v4.2.3
+- Netdev fix race in resq_queue_unlink
+
+* Sun Oct  4 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Add upstream patch to fix a Anatop (i.MX) regulator loading as a module
+- Add support for BeagleBone Green
+
+* Fri Oct 02 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-7613 Unauthorized access to IPC via SysV shm (rhbz 1268270 1268273)
+
+* Thu Oct 01 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-2925 Don't allow bind mount escape (rhbz 1209367 1209373)
+
 * Tue Sep 29 2015 Justin M. Forbes <jforbes@fedoraproject.org> - 4.2.2-300
 - Linux v4.2.2
 
