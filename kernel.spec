@@ -677,6 +677,9 @@ Patch537: si2157-Bounds-check-firmware.patch
 #rhbz 1268037
 Patch538: ALSA-hda-Add-dock-support-for-ThinkPad-T550.patch
 
+#CVE-2015-5156 rhbz 1243852 1266515
+Patch539: virtio-net-drop-NETIF_F_FRAGLIST.patch
+
 # Surface Pro 3
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -1464,6 +1467,9 @@ ApplyPatch si2157-Bounds-check-firmware.patch
 
 #rhbz 1268037
 ApplyPatch ALSA-hda-Add-dock-support-for-ThinkPad-T550.patch
+
+#CVE-2015-5156 rhbz 1243852 1266515
+ApplyPatch virtio-net-drop-NETIF_F_FRAGLIST.patch
 
 # Surface Pro 3
 ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -2329,6 +2335,9 @@ fi
 #                                    ||----w |
 #                                    ||     ||
 %changelog
+* Wed Oct 07 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-5156 virtio-net: bug overflow with large fraglist (rhbz 1243852 1266515)
+
 * Mon Oct 05 2015 Laura Abbott <labbott@fedoraproject.org>
 - Make headphone work with with T550 + Dock (rhbz 1268037)
 
