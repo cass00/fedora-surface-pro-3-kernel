@@ -1,7 +1,15 @@
-From 74e7d8e19b044a36d0386fc666b4a201e7d08bf7 Mon Sep 17 00:00:00 2001
-From: Chen Yu <yu.c.chen@intel.com>
-Date: Tue, 18 Aug 2015 23:30:25 +0800
-Subject: [PATCH] surface pro 3: Add support driver for Surface Pro 3 buttons
+From:	Chen Yu <yu.c.chen@intel.com>
+To:	dvhart@infradead.org, joe@perches.com, akpm@linux-foundation.org,
+ arnd@arndb.de, gregkh@linuxfoundation.org, mchehab@osg.samsung.com,
+ davem@davemloft.net, jslaby@suse.com, tj@kernel.org
+Cc:	rjw@rjwysocki.net, rui.zhang@intel.com,
+ platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org, Chen Yu
+ <yu.c.chen@intel.com>
+Subject: [PATCH] [v4] surface pro 3: Add support driver for Surface Pro 3
+ buttons
+Date:	Tue, 18 Aug 2015 23:30:25 +0800
+Message-Id: <1439911825-23536-1-git-send-email-yu.c.chen@intel.com>
+List-ID: <platform-driver-x86.vger.kernel.org>
 
 Since Surface Pro 3 does not follow the specs of "Windows ACPI Design
 Guide for SoC Platform", code in drivers/input/misc/soc_array.c can
@@ -24,18 +32,38 @@ Tested-by: Donavan Lance <tusklahoma@gmail.com>
 Tested-by: Stephen Just <stephenjust@gmail.com>
 Signed-off-by: Chen Yu <yu.c.chen@intel.com>
 ---
+v4:
+ - Add following code in driver's probe callback:
+	if (strncmp(acpi_device_bid(device), SURFACE_BUTTON_OBJ_NAME,
+	    strlen(SURFACE_BUTTON_OBJ_NAME)))
+		return -ENODEV;
+   to make sure only device object name of 'VGBI' will load this driver.
+   Because it is reported that, Surface 3(no Pro) also has a device with
+   hid MSHW0028, but it is not a button device.
+
+v3:
+ - Revert handle_surface_button_notify and keep original
+   'switch/case' in surface_button_notify. Add/fix some
+   comments for surface_button_notify.
+
+v2:
+ - Introduce MACRO handle_surface_button_notify to make
+   it pairing the PRESS and RELEASE cases, convert dev_info
+   to dev_info_ratelimited when in error condition.
+
+---
  MAINTAINERS                               |   5 +
- drivers/platform/x86/Kconfig              |   6 +
- drivers/platform/x86/Makefile             |   2 +
+ drivers/platform/x86/Kconfig              |   5 +
+ drivers/platform/x86/Makefile             |   1 +
  drivers/platform/x86/surfacepro3_button.c | 215 ++++++++++++++++++++++++++++++
- 4 files changed, 228 insertions(+)
+ 4 files changed, 226 insertions(+)
  create mode 100644 drivers/platform/x86/surfacepro3_button.c
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index d8afd29..b8ac209 100644
+index 569568f..eacaa41 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -6451,6 +6451,11 @@ T:	git git://git.monstr.eu/linux-2.6-microblaze.git
+@@ -6721,6 +6721,11 @@ T:	git git://git.monstr.eu/linux-2.6-microblaze.git
  S:	Supported
  F:	arch/microblaze/
  
@@ -48,29 +76,27 @@ index d8afd29..b8ac209 100644
  M:	Oliver Neukum <oliver@neukum.org>
  S:	Maintained
 diff --git a/drivers/platform/x86/Kconfig b/drivers/platform/x86/Kconfig
-index f9f205c..99b0fe5 100644
+index 6dc13e4..c69bb70 100644
 --- a/drivers/platform/x86/Kconfig
 +++ b/drivers/platform/x86/Kconfig
-@@ -885,4 +885,10 @@ config PVPANIC
- 	  a paravirtualized device provided by QEMU; it lets a virtual machine
- 	  (guest) communicate panic events to the host.
+@@ -919,4 +919,9 @@ config INTEL_PMC_IPC
+ 	The PMC is an ARC processor which defines IPC commands for communication
+ 	with other entities in the CPU.
  
 +config SURFACE_PRO3_BUTTON
 +	tristate "Power/home/volume buttons driver for Microsoft Surface Pro 3 tablet"
 +	depends on ACPI && INPUT
 +	---help---
 +	  This driver handles the power/home/volume buttons on the Microsoft Surface Pro 3 tablet.
-+
  endif # X86_PLATFORM_DEVICES
 diff --git a/drivers/platform/x86/Makefile b/drivers/platform/x86/Makefile
-index f82232b..93261ad 100644
+index dda95a9..ada5128 100644
 --- a/drivers/platform/x86/Makefile
 +++ b/drivers/platform/x86/Makefile
-@@ -58,3 +58,5 @@ obj-$(CONFIG_INTEL_SMARTCONNECT)	+= intel-smartconnect.o
- 
+@@ -60,3 +60,4 @@ obj-$(CONFIG_INTEL_SMARTCONNECT)	+= intel-smartconnect.o
  obj-$(CONFIG_PVPANIC)           += pvpanic.o
  obj-$(CONFIG_ALIENWARE_WMI)	+= alienware-wmi.o
-+
+ obj-$(CONFIG_INTEL_PMC_IPC)	+= intel_pmc_ipc.o
 +obj-$(CONFIG_SURFACE_PRO3_BUTTON)	+= surfacepro3_button.o
 diff --git a/drivers/platform/x86/surfacepro3_button.c b/drivers/platform/x86/surfacepro3_button.c
 new file mode 100644
@@ -294,5 +320,4 @@ index 0000000..6c6f11c
 +
 +module_acpi_driver(surface_button_driver);
 -- 
-2.4.3
-
+1.8.4.2
