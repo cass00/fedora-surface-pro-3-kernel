@@ -634,6 +634,9 @@ Patch537: si2157-Bounds-check-firmware.patch
 #rhbz 1268037
 Patch538: ALSA-hda-Add-dock-support-for-ThinkPad-T550.patch
 
+#rhbz 1271812
+Patch539: iscsi-target-Avoid-OFMarker-IFMarker-negotiation.patch
+
 # Surface Pro 3 support
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -2083,6 +2086,9 @@ fi
 #
 # 
 %changelog
+* Thu Oct 15 2015 Justin M. Forbes <jforbes@fedoraproject.org>
+- Fix for iscsi target issues (#rhbz 1271812)
+
 * Wed Oct 07 2015 Josh Boyer <jwboyer@fedoraproject.org>
 - Increase the default number of runtime UARTS (rhbz 1264383)
 
