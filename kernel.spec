@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 4
+%define rcrev 5
 # The git snapshot level
-%define gitrev 3
+%define gitrev 2
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -586,12 +586,6 @@ Patch508: kexec-uefi-copy-secure_boot-flag-in-boot-params.patch
 
 #rhbz 1239050
 Patch509: ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
-
-Patch520: ARM-dts-Fix-Makefile-target-for-sun4i-a10-itead-itea.patch
-
-#rhbz 1238803 1249850
-Patch522: drm-qxl-avoid-buffer-reservation-in-qxl_crtc_page_fl.patch
-Patch523: drm-qxl-avoid-dependency-lock.patch
 
 Patch904: kdbus.patch
 
@@ -2042,6 +2036,17 @@ fi
 #
 # 
 %changelog
+* Fri Oct 16 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc5.git2.1
+- Linux v4.3-rc5-65-g69984b6
+
+* Wed Oct 14 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc5.git1.1
+- Linux v4.3-rc5-37-g5b5f145
+- Reenable debugging options.
+
+* Mon Oct 12 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc5.git0.1
+- Linux v4.3-rc5
+- Disable debugging options.
+
 * Thu Oct 08 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc4.git3.1
 - Linux v4.3-rc4-61-gc6fa8e6
 
