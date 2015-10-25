@@ -52,7 +52,7 @@ Summary: The Linux kernel
 %if 0%{?released_kernel}
 
 # Do we have a -stable update to apply?
-%define stable_update 3
+%define stable_update 4
 # Set rpm version accordingly
 %if 0%{?stable_update}
 %define stablerev %{stable_update}
@@ -606,24 +606,8 @@ Patch513: nv46-Change-mc-subdev-oclass-from-nv44-to-nv4c.patch
 Patch517: vmwgfx-Rework-device-initialization.patch
 Patch518: drm-vmwgfx-Allow-dropped-masters-render-node-like-ac.patch
 
-#rhbz 1237136
-Patch522: block-blkg_destroy_all-should-clear-q-root_blkg-and-.patch
-
 #CVE-2015-6937 rhbz 1263139 1263140
 Patch523: RDS-verify-the-underlying-transport-exists-before-cr.patch
-
-#rhbz 1263762
-Patch526: 0001-x86-cpu-cacheinfo-Fix-teardown-path.patch
-
-#CVE-2015-5257 rhbz 1265607 1265612
-Patch527: USB-whiteheat-fix-potential-null-deref-at-probe.patch
-
-#CVE-2015-2925 rhbz 1209367 1209373
-Patch528: dcache-Handle-escaped-paths-in-prepend_path.patch
-Patch529: vfs-Test-for-and-handle-paths-that-are-unreachable-f.patch
-
-#CVE-2015-7613 rhbz 1268270 1268273
-Patch530: Initialize-msg-shm-IPC-objects-before-doing-ipc_addi.patch
 
 Patch531: net-inet-fix-race-in-reqsk_queue_unlink.patch
 
@@ -631,11 +615,9 @@ Patch531: net-inet-fix-race-in-reqsk_queue_unlink.patch
 Patch536: si2168-Bounds-check-firmware.patch
 Patch537: si2157-Bounds-check-firmware.patch
 
-#rhbz 1268037
-Patch538: ALSA-hda-Add-dock-support-for-ThinkPad-T550.patch
-
-#rhbz 1271812
-Patch539: iscsi-target-Avoid-OFMarker-IFMarker-negotiation.patch
+#rhbz 1272172
+Patch540: 0001-KEYS-Fix-crash-when-attempt-to-garbage-collect-an-un.patch
+Patch541: 0002-KEYS-Don-t-permit-request_key-to-construct-a-new-key.patch
 
 # Surface Pro 3 support
 Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
@@ -2086,6 +2068,15 @@ fi
 #
 # 
 %changelog
+* Fri Oct 23 2015 Justin M. Forbes <jforbes@fedoraproject.org> - 4.2.4-300
+- Linux v4.2.4 (rhbz 1272645)
+
+* Tue Oct 20 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Enable IEEE802154_ATUSB (rhbz 1272935)
+
+* Mon Oct 19 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix crash in key garbage collector when using request_key (rhbz 1272172)
+
 * Thu Oct 15 2015 Justin M. Forbes <jforbes@fedoraproject.org>
 - Fix for iscsi target issues (#rhbz 1271812)
 
