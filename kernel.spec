@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 6
+%define rcrev 7
 # The git snapshot level
-%define gitrev 3
+%define gitrev 2
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -586,6 +586,12 @@ Patch508: kexec-uefi-copy-secure_boot-flag-in-boot-params.patch
 
 #rhbz 1239050
 Patch509: ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
+
+#rhbz 1275490
+Patch510: 0001-iwlwifi-Add-new-PCI-IDs-for-the-8260-series.patch
+
+#CVE-2015-7990 rhbz 1276437 1276438
+Patch511: RDS-fix-race-condition-when-sending-a-message-on-unb.patch
 
 Patch904: kdbus.patch
 
@@ -2036,6 +2042,29 @@ fi
 #
 # 
 %changelog
+* Thu Oct 29 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-7099 RDS: race condition on unbound socket null deref (rhbz 1276437 1276438)
+
+* Thu Oct 29 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Move iscsi_tcp and related modules to kernel-core (rhbz 1249424)
+
+* Wed Oct 28 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc7.git2.1
+- Linux v4.3-rc7-32-g8a28d67
+
+* Wed Oct 28 2015 Laura Abbott <labbott@redhat.com>
+- Disable CONFIG_DMADEVICES_VDEBUG
+
+* Wed Oct 28 2015 Laura Abbott <labbott@redhat.com>
+- Add new PCI ids for wireless, including Lenovo Yoga
+
+* Tue Oct 27 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc7.git1.1
+- Linux v4.3-rc7-19-g858e904
+- Reenable debugging options.
+
+* Mon Oct 26 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-0.rc7.git0.1
+- Linux v4.3-rc7
+- Disable debugging options.
+
 * Fri Oct 23 2015 Laura Abbott <labbott@redhat.com>
 - Enable CONFIG_FS_DAX (rhbz 1274844)
 
