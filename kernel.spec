@@ -54,7 +54,7 @@ Summary: The Linux kernel
 %if 0%{?released_kernel}
 
 # Do we have a -stable update to apply?
-%define stable_update 11
+%define stable_update 12
 # Set rpm version accordingly
 %if 0%{?stable_update}
 %define stablerev %{stable_update}
@@ -576,6 +576,7 @@ Patch16000: amd-xgbe-a0-Add-support-for-XGBE-on-A0.patch
 Patch16001: amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
 Patch16002: arm64-avoid-needing-console-to-enable-serial-console.patch
 Patch16003: usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
+Patch16004: showmem-cma-correct-reserved-memory-calculation.patch
 
 # ARMv7
 Patch16020: ARM-tegra-usb-no-reset.patch
@@ -649,9 +650,8 @@ Patch518: drm-vmwgfx-Allow-dropped-masters-render-node-like-ac.patch
 
 #CVE-2015-6937 rhbz 1263139 1263140
 Patch523: RDS-verify-the-underlying-transport-exists-before-cr.patch
-
-#rhbz 1266691
-Patch535: inet-fix-race-in-reqsk_queue_unlink.patch
+#CVE-2015-7990 rhbz 1276437 1276438
+Patch524: RDS-fix-race-condition-when-sending-a-message-on-unb.patch
 
 #rhbz 1265978
 Patch536: si2168-Bounds-check-firmware.patch
@@ -1239,6 +1239,8 @@ ApplyPatch amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
 ApplyPatch arm64-avoid-needing-console-to-enable-serial-console.patch
 ApplyPatch usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
 
+ApplyPatch showmem-cma-correct-reserved-memory-calculation.patch
+
 #
 # ARM
 #
@@ -1424,9 +1426,8 @@ ApplyPatch drm-vmwgfx-Allow-dropped-masters-render-node-like-ac.patch
 
 #CVE-2015-6937 rhbz 1263139 1263140
 ApplyPatch RDS-verify-the-underlying-transport-exists-before-cr.patch
-
-#rhbz 1266691
-ApplyPatch inet-fix-race-in-reqsk_queue_unlink.patch
+#CVE-2015-7990 rhbz 1276437 1276438
+ApplyPatch RDS-fix-race-condition-when-sending-a-message-on-unb.patch
 
 #rhbz 1265978
 ApplyPatch si2168-Bounds-check-firmware.patch
@@ -2303,6 +2304,15 @@ fi
 #                                    ||----w |
 #                                    ||     ||
 %changelog
+* Thu Oct 29 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-7099 RDS: race condition on unbound socket null deref (rhbz 1276437 1276438)
+
+* Tue Oct 27 2015 Peter Robinson <pbrobinson@fedoraproject.org> - 4.1.12-101
+- CMA memory patch to fix aarch64 builder lockups
+
+* Tue Oct 27 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.12
+- Linux v4.1.12
+
 * Fri Oct 23 2015 Josh Boyer <jwboyer@fedoraproject.org> - 4.1.11
 - Linux v4.1.11
 
