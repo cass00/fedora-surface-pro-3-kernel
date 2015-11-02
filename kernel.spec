@@ -40,7 +40,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 990
+%global baserelease 991
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -622,7 +622,7 @@ Patch540: 0001-KEYS-Fix-crash-when-attempt-to-garbage-collect-an-un.patch
 Patch541: 0002-KEYS-Don-t-permit-request_key-to-construct-a-new-key.patch
 
 # Surface Pro 3 support
-Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
+Patch9997: Add-Microsoft-Surface-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
 Patch9999: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
 
@@ -1162,8 +1162,8 @@ cp -al vanilla-%{vanillaversion} linux-%{KVERREL}
 cd linux-%{KVERREL}
 if [ ! -d .git ]; then
     git init
-    git config user.email "kernel-team@fedoraproject.org"
-    git config user.name "Fedora Kernel Team"
+    git config user.email "tuskahoma@gmail.com"
+    git config user.name "Donavan Lance"
     git config gc.auto 0
     git add .
     git commit -a -q -m "baseline"
