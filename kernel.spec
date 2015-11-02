@@ -40,7 +40,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 990
+%global baserelease 991
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -631,7 +631,7 @@ Patch540: 0001-KEYS-Fix-crash-when-attempt-to-garbage-collect-an-un.patch
 Patch541: 0002-KEYS-Don-t-permit-request_key-to-construct-a-new-key.patch
 
 # Surface Pro 3
-Patch9997: Add-Microsoft-Surface-Pro-3-camera-support.patch
+Patch9997: Add-Microsoft-Surface-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
 Patch9999: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
 
@@ -1386,7 +1386,7 @@ ApplyPatch 0001-KEYS-Fix-crash-when-attempt-to-garbage-collect-an-un.patch
 ApplyPatch 0002-KEYS-Don-t-permit-request_key-to-construct-a-new-key.patch
 
 # Surface Pro 3
-ApplyPatch Add-Microsoft-Surface-Pro-3-camera-support.patch
+ApplyPatch Add-Microsoft-Surface-camera-support.patch
 ApplyPatch Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
 ApplyPatch surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
 
