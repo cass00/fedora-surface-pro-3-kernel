@@ -1133,8 +1133,8 @@ cp -al vanilla-%{vanillaversion} linux-%{KVERREL}
 cd linux-%{KVERREL}
 if [ ! -d .git ]; then
     git init
-    git config user.email "kernel-team@fedoraproject.org"
-    git config user.name "Fedora Kernel Team"
+    git config user.email "tusklahoma@gmail.com"
+    git config user.name "Donavan Lance"
     git config gc.auto 0
     git add .
     git commit -a -q -m "baseline"
