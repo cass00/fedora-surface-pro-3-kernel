@@ -595,7 +595,7 @@ Patch511: RDS-fix-race-condition-when-sending-a-message-on-unb.patch
 
 #Surface Pro 3
 Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
-Patch9998: Add-Microsoft-Surface-Pro-3-camera-support.patch
+Patch9998: Add-Microsoft-Surface-camera-support.patch
 
 # END OF PATCH DEFINITIONS
 
