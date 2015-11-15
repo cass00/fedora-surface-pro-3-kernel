@@ -6,7 +6,7 @@ Summary: The Linux kernel
 # For a stable, released kernel, released_kernel should be 1. For rawhide
 # and/or a kernel built from an rc or git snapshot, released_kernel should
 # be 0.
-%global released_kernel 1
+%global released_kernel 0
 
 # Sign modules on x86.  Make sure the config files match this setting if more
 # architectures are added.
@@ -67,7 +67,7 @@ Summary: The Linux kernel
 # The rc snapshot level
 %define rcrev 0
 # The git snapshot level
-%define gitrev 0
+%define gitrev 9
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -122,7 +122,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 1
+%define debugbuildsenabled 0
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -498,13 +498,11 @@ Patch453: amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
 
 Patch454: arm64-avoid-needing-console-to-enable-serial-console.patch
 
-Patch455: usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
-
 Patch456: arm64-acpi-drop-expert-patch.patch
 
 Patch457: ARM-tegra-usb-no-reset.patch
 
-Patch458: ARM-dts-Add-am335x-bonegreen.patch
+Patch459: 0001-watchdog-omap_wdt-fix-null-pointer-dereference.patch
 
 Patch463: arm-i.MX6-Utilite-device-dtb.patch
 
@@ -584,14 +582,17 @@ Patch503: drm-i915-turn-off-wc-mmaps.patch
 
 Patch508: kexec-uefi-copy-secure_boot-flag-in-boot-params.patch
 
-#rhbz 1239050
-Patch509: ideapad-laptop-Add-Lenovo-Yoga-3-14-to-no_hw_rfkill-.patch
-
 #rhbz 1275490
 Patch510: 0001-iwlwifi-Add-new-PCI-IDs-for-the-8260-series.patch
 
 #CVE-2015-7990 rhbz 1276437 1276438
 Patch511: RDS-fix-race-condition-when-sending-a-message-on-unb.patch
+
+#rhbz 1269300
+Patch552: megaraid_sas-Do-not-use-PAGE_SIZE-for-max_sectors.patch
+
+#rhbz 1275490
+Patch553: ideapad-laptop-Add-Lenovo-Yoga-900-to-no_hw_rfkill-d.patch
 
 #Surface Pro 3
 Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
@@ -2040,7 +2041,77 @@ fi
 #
 # 
 %changelog
-* Mon Nov 02 2015 Laura Abbott <labbott@redhat.com> - 4.2.0-1
+* Fri Nov 13 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc0.git9.1
+- Linux v4.3-11742-gf6d07df
+
+* Thu Nov 12 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc0.git8.1
+- Linux v4.3-11626-g5d50ac7
+- Set CONFIG_SECTION_MISMATCH_WARN_ONLY since powerpc has mismatches
+
+* Thu Nov 12 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-5327 x509 time validation
+
+* Wed Nov 11 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc0.git7.2
+- Drop CONFIG_DRM_DW_HDMI_AHB_AUDIO for now
+
+* Wed Nov 11 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc0.git7.1
+- Linux v4.3-11481-gc5a3788
+- Actually drop CONFIG_DMADEVICES_VDEBUG
+
+* Tue Nov 10 2015 Laura Abbott <labbott@redhat.com>
+- Enable CONFIG_CMA on x86_64 (rhbz 1278985)
+
+* Tue Nov 10 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc0.git6.1
+- Linux v4.3-9393-gbd4f203
+
+* Tue Nov 10 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix Yoga 900 rfkill switch issues (rhbz 1275490)
+- Fix incorrect size calculations in megaraid with 64K pages (rhbz 1269300)
+- CVE-2015-8104 kvm: DoS infinite loop in microcode DB exception (rhbz 1278496 1279691)
+- CVE-2015-5307 kvm: DoS infinite loop in microcode AC exception (rhbz 1277172 1279688)
+
+* Tue Nov 10 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Don't build Serial 8250 on ppc platforms (fix FBTFS)
+- Enable some more common sensors on ARMv7
+
+* Mon Nov 09 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc0.git5.1
+- Linux v4.3-9269-gce5c2d2
+
+* Sun Nov  8 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Minor ARMv7 updates
+
+* Fri Nov 06 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc0.git4.2
+- Fix ARM dt compilation error
+
+* Fri Nov 06 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc0.git4.1
+- Linux v4.3-7965-gd1e41ff
+
+* Fri Nov  6 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Disable Exynos IOMMU as it crashes
+- Minor ARMv7 update for battiery/charging
+
+* Thu Nov 05 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc0.git3.1
+- Linux v4.3-6681-g8e483ed
+
+* Wed Nov 04 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc0.git2.1
+- Linux v4.3-1107-g66ef349
+
+* Wed Nov  4 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Minor ARMv7 config updates
+
+* Tue Nov 03 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc0.git1.1
+- Linux v4.3-272-g5062ecd
+- Reenable debugging options.
+
+* Tue Nov 03 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-7799 slip:crash when using PPP char dev driver (rhbz 1271134 1271135)
+
+* Tue Nov  3 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Add patch to fix crash in omap_wdt (headed upstream)
+- Build in ARM generic crypto optomisation modules
+- Minor ARM updates
+
+* Mon Nov 02 2015 Laura Abbott <labbott@redhat.com> - 4.3.0-1
 - Linux v4.3
 - Disable debugging options.
 
