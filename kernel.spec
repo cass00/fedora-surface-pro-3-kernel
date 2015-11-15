@@ -42,7 +42,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 991
+%global baserelease 990
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -54,7 +54,7 @@ Summary: The Linux kernel
 %if 0%{?released_kernel}
 
 # Do we have a -stable update to apply?
-%define stable_update 12
+%define stable_update 13
 # Set rpm version accordingly
 %if 0%{?stable_update}
 %define stablerev %{stable_update}
@@ -384,7 +384,7 @@ BuildRequires: net-tools, hostname, bc
 BuildRequires: sparse
 %endif
 %if %{with_perf}
-BuildRequires: elfutils-devel zlib-devel binutils-devel newt-devel python-devel perl(ExtUtils::Embed) bison flex
+BuildRequires: elfutils-devel zlib-devel binutils-devel newt-devel python-devel perl(ExtUtils::Embed) bison flex xz-devel
 BuildRequires: audit-libs-devel
 %ifnarch s390 s390x %{arm}
 BuildRequires: numactl-devel
@@ -499,6 +499,11 @@ Patch05: kbuild-AFTER_LINK.patch
 
 
 # Git trees.
+
+# Surface Pro 3
+Patch9997: Add-Microsoft-Surface-camera-support.patch
+Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+Patch9999: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
 
 # Standalone patches
 
@@ -653,10 +658,6 @@ Patch523: RDS-verify-the-underlying-transport-exists-before-cr.patch
 #CVE-2015-7990 rhbz 1276437 1276438
 Patch524: RDS-fix-race-condition-when-sending-a-message-on-unb.patch
 
-#rhbz 1265978
-Patch536: si2168-Bounds-check-firmware.patch
-Patch537: si2157-Bounds-check-firmware.patch
-
 #CVE-2015-5156 rhbz 1243852 1266515
 Patch539: virtio-net-drop-NETIF_F_FRAGLIST.patch
 
@@ -664,10 +665,18 @@ Patch539: virtio-net-drop-NETIF_F_FRAGLIST.patch
 Patch540: 0001-KEYS-Fix-crash-when-attempt-to-garbage-collect-an-un.patch
 Patch541: 0002-KEYS-Don-t-permit-request_key-to-construct-a-new-key.patch
 
-# Surface Pro 3
-Patch9997: Add-Microsoft-Surface-camera-support.patch
-Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
-Patch9999: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
+#CVE-2015-7799 rhbz 1271134 1271135
+Patch543: isdn_ppp-Add-checks-for-allocation-failure-in-isdn_p.patch
+Patch544: ppp-slip-Validate-VJ-compression-slot-parameters-com.patch
+
+#CVE-2015-5307 rhbz 1277172 1279688
+Patch550: KVM-x86-work-around-infinite-loop-in-microcode-when-.patch
+
+#CVE-2015-8104 rhbz 1278496 1279691
+Patch551: KVM-svm-unconditionally-intercept-DB.patch
+
+#rhbz 1275490
+Patch553: ideapad-laptop-Add-Lenovo-Yoga-900-to-no_hw_rfkill-d.patch
 
 # END OF PATCH DEFINITIONS
 
@@ -1227,6 +1236,11 @@ ApplyPatch kbuild-AFTER_LINK.patch
 
 %if !%{nopatches}
 
+# Surface Pro 3
+ApplyPatch Add-Microsoft-Surface-camera-support.patch
+ApplyPatch Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+ApplyPatch surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
+
 # Architecture patches
 # x86(-64)
 ApplyPatch lib-cpumask-Make-CPUMASK_OFFSTACK-usable-without-deb.patch
@@ -1429,10 +1443,6 @@ ApplyPatch RDS-verify-the-underlying-transport-exists-before-cr.patch
 #CVE-2015-7990 rhbz 1276437 1276438
 ApplyPatch RDS-fix-race-condition-when-sending-a-message-on-unb.patch
 
-#rhbz 1265978
-ApplyPatch si2168-Bounds-check-firmware.patch
-ApplyPatch si2157-Bounds-check-firmware.patch
-
 #CVE-2015-5156 rhbz 1243852 1266515
 ApplyPatch virtio-net-drop-NETIF_F_FRAGLIST.patch
 
@@ -1440,10 +1450,18 @@ ApplyPatch virtio-net-drop-NETIF_F_FRAGLIST.patch
 ApplyPatch 0001-KEYS-Fix-crash-when-attempt-to-garbage-collect-an-un.patch
 ApplyPatch 0002-KEYS-Don-t-permit-request_key-to-construct-a-new-key.patch
 
-# Surface Pro 3
-ApplyPatch Add-Microsoft-Surface-camera-support.patch
-ApplyPatch Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
-ApplyPatch surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
+#CVE-2015-7799 rhbz 1271134 1271135
+ApplyPatch isdn_ppp-Add-checks-for-allocation-failure-in-isdn_p.patch
+ApplyPatch ppp-slip-Validate-VJ-compression-slot-parameters-com.patch
+
+#CVE-2015-5307 rhbz 1277172 1279688
+ApplyPatch KVM-x86-work-around-infinite-loop-in-microcode-when-.patch
+
+#CVE-2015-8104 rhbz 1278496 1279691
+ApplyPatch KVM-svm-unconditionally-intercept-DB.patch
+
+#rhbz 1275490
+ApplyPatch ideapad-laptop-Add-Lenovo-Yoga-900-to-no_hw_rfkill-d.patch
 
 # END OF PATCH APPLICATIONS
 
@@ -2304,6 +2322,26 @@ fi
 #                                    ||----w |
 #                                    ||     ||
 %changelog
+* Tue Nov 10 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix Yoga 900 rfkill switch issues (rhbz 1275490)
+
+* Tue Nov 10 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Linux v4.1.13
+- CVE-2015-8104 kvm: DoS infinite loop in microcode DB exception (rhbz 1278496 1279691)
+- CVE-2015-5307 kvm: DoS infinite loop in microcode AC exception (rhbz 1277172 1279688)
+
+* Thu Nov 05 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix backlight regression on older radeon devices (rhbz 1278407)
+
+* Tue Nov 03 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-7799 slip:crash when using PPP char dev driver (rhbz 1271134 1271135)
+
+* Tue Nov 03 2015 Justin M. Forbes <jforbes@fedoraproject.org>
+- Add xz-devel builreq for perf (rhbz 1167457)
+
+* Mon Nov 02 2015 Laura Abbott <labbott@fedoraproject.org>
+- Add spurious wakeup quirk for LynxPoint-LP controllers (rhbz 1257131)
+
 * Thu Oct 29 2015 Josh Boyer <jwboyer@fedoraproject.org>
 - CVE-2015-7099 RDS: race condition on unbound socket null deref (rhbz 1276437 1276438)
 
