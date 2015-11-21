@@ -494,12 +494,12 @@ Patch05: kbuild-AFTER_LINK.patch
 
 # Git trees.
 
-# Standalone patches
-
 # Surface Pro 3
 Patch9997: Add-Microsoft-Surface-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
 Patch9999: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
+
+# Standalone patches
 
 Patch450: input-kill-stupid-messages.patch
 Patch452: no-pcspkr-modalias.patch
