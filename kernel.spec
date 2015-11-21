@@ -488,6 +488,10 @@ Source5005: kbuild-AFTER_LINK.patch
 
 # Git trees.
 
+#Surface Pro 3
+Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+Patch9998: Add-Microsoft-Surface-camera-support.patch
+
 # Standalone patches
 
 Patch451: lib-cpumask-Make-CPUMASK_OFFSTACK-usable-without-deb.patch
@@ -593,10 +597,6 @@ Patch552: megaraid_sas-Do-not-use-PAGE_SIZE-for-max_sectors.patch
 
 #rhbz 1275490
 Patch553: ideapad-laptop-Add-Lenovo-Yoga-900-to-no_hw_rfkill-d.patch
-
-#Surface Pro 3
-Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
-Patch9998: Add-Microsoft-Surface-camera-support.patch
 
 # END OF PATCH DEFINITIONS
 
