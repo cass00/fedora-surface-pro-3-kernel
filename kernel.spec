@@ -488,12 +488,12 @@ Source5005: kbuild-AFTER_LINK.patch
 
 # Git trees.
 
-# Standalone patches
-
 # Surface Pro 3 support
 Patch9997: Add-Microsoft-Surface-camera-support.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
 Patch9999: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
+
+# Standalone patches
 
 Patch451: lib-cpumask-Make-CPUMASK_OFFSTACK-usable-without-deb.patch
 
