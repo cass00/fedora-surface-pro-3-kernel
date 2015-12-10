@@ -489,7 +489,7 @@ Source5005: kbuild-AFTER_LINK.patch
 # Git trees.
 
 # Surface Pro 3 support
-Patch9997: Add-Microsoft-Surface-camera-support.patch
+Patch9997: uvcvideo-Enable-UVC-1.5-device-detection.patch
 Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
 Patch9999: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
 
