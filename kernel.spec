@@ -52,7 +52,7 @@ Summary: The Linux kernel
 %if 0%{?released_kernel}
 
 # Do we have a -stable update to apply?
-%define stable_update 6
+%define stable_update 7
 # Set rpm version accordingly
 %if 0%{?stable_update}
 %define stablerev %{stable_update}
@@ -613,8 +613,6 @@ Patch513: nv46-Change-mc-subdev-oclass-from-nv44-to-nv4c.patch
 Patch517: vmwgfx-Rework-device-initialization.patch
 Patch518: drm-vmwgfx-Allow-dropped-masters-render-node-like-ac.patch
 
-#CVE-2015-6937 rhbz 1263139 1263140
-Patch523: RDS-verify-the-underlying-transport-exists-before-cr.patch
 #CVE-2015-7990 rhbz 1276437 1276438
 Patch524: RDS-fix-race-condition-when-sending-a-message-on-unb.patch
 
@@ -625,9 +623,6 @@ Patch541: 0002-KEYS-Don-t-permit-request_key-to-construct-a-new-key.patch
 #CVE-2015-7799 rhbz 1271134 1271135
 Patch543: isdn_ppp-Add-checks-for-allocation-failure-in-isdn_p.patch
 Patch544: ppp-slip-Validate-VJ-compression-slot-parameters-com.patch
-
-#CVE-2015-5307 rhbz 1277172 1279688
-Patch550: KVM-x86-work-around-infinite-loop-in-microcode-when-.patch
 
 #CVE-2015-8104 rhbz 1278496 1279691
 Patch551: KVM-svm-unconditionally-intercept-DB.patch
@@ -650,6 +645,24 @@ Patch559: 0001-ipv6-Avoid-creating-RTF_CACHE-from-a-rt-that-is-not-.patch
 Patch560: 0001-KVM-x86-build-kvm_userspace_memory_region-in-x86_set.patch
 Patch561: 0002-KVM-x86-map-unmap-private-slots-in-__x86_set_memory_.patch
 Patch562: 0003-KVM-x86-fix-previous-commit-for-32-bit.patch
+
+#CVE-2015-8374 rhbz 1286261 1286262
+Patch565: Btrfs-fix-truncation-of-compressed-and-inlined-exten.patch
+
+#rhbz 1284059
+Patch566: KEYS-Fix-handling-of-stored-error-in-a-negatively-in.patch
+
+#CVE-2015-7833 rhbz 1270158 1270160
+Patch567: usbvision-fix-crash-on-detecting-device-with-invalid.patch
+
+#CVE-2015-7515 rhbz 1285326 1285331
+Patch568: Input-aiptek-fix-crash-on-detecting-device-without-e.patch
+
+#rhbz 1287819
+Patch570: HID-multitouch-enable-palm-rejection-if-device-imple.patch
+
+#rhbz 1286293
+Patch571: ideapad-laptop-Add-Lenovo-ideapad-Y700-17ISK-to-no_h.patch
 
 # END OF PATCH DEFINITIONS
 
@@ -2095,7 +2108,25 @@ fi
 #
 # 
 %changelog
-* Fri Nov 20 2015 Justin M. Forbes <jmforbes@fedoraproject.org>
+* Thu Dec 10 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix rfkill issues on ideapad Y700-17ISK (rhbz 1286293)
+
+* Wed Dec 09 2015 <jmforbes@fedoraproject.org> - 4.2.7-300
+- Linux v4.2.7
+
+* Thu Dec 03 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Add patch to fix palm rejection on certain touchpads (rhbz 1287819)
+- Add new PCI ids for wireless, including Lenovo Yoga (rhbz 1275490)
+
+* Tue Dec 01 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-7515 aiptek: crash on invalid device descriptors (rhbz 1285326 1285331)
+- CVE-2015-7833 usbvision: crash on invalid device descriptors (rhbz 1270158 1270160)
+
+* Mon Nov 30 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix crash in add_key (rhbz 1284059)
+- CVE-2015-8374 btrfs: info leak when truncating compressed/inlined extents (rhbz 1286261 1286262)
+
+* Fri Nov 20 2015 Justin M. Forbes <jmforbes@fedoraproject.org> - 4.2.6-301
 - Fix for GRE tunnel running in IPSec (rhbz 1272571)
 - Fix KVM on specific hardware (rhbz 1278688)
 
