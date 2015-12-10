@@ -65,7 +65,7 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 1
+%define rcrev 4
 # The git snapshot level
 %define gitrev 3
 # Set rpm version accordingly
@@ -506,7 +506,7 @@ Patch456: arm64-acpi-drop-expert-patch.patch
 
 Patch457: ARM-tegra-usb-no-reset.patch
 
-Patch459: 0001-watchdog-omap_wdt-fix-null-pointer-dereference.patch
+Patch460: mfd-wm8994-Ensure-that-the-whole-MFD-is-built-into-a.patch
 
 Patch463: arm-i.MX6-Utilite-device-dtb.patch
 
@@ -586,11 +586,17 @@ Patch503: drm-i915-turn-off-wc-mmaps.patch
 
 Patch508: kexec-uefi-copy-secure_boot-flag-in-boot-params.patch
 
-#rhbz 1275490
-Patch510: 0001-iwlwifi-Add-new-PCI-IDs-for-the-8260-series.patch
+#CVE-2015-7833 rhbz 1270158 1270160
+Patch567: usbvision-fix-crash-on-detecting-device-with-invalid.patch
 
-#CVE-2015-7990 rhbz 1276437 1276438
-Patch511: RDS-fix-race-condition-when-sending-a-message-on-unb.patch
+#CVE-2015-7515 rhbz 1285326 1285331
+Patch568: Input-aiptek-fix-crash-on-detecting-device-without-e.patch
+
+#rhbz 1287819
+Patch570: HID-multitouch-enable-palm-rejection-if-device-imple.patch
+
+#rhbz 1286293
+Patch571: ideapad-laptop-Add-Lenovo-ideapad-Y700-17ISK-to-no_h.patch
 
 # END OF PATCH DEFINITIONS
 
@@ -2035,8 +2041,67 @@ fi
 #
 # 
 %changelog
-* Sat Nov 21 2015 Donavan Lance <tusklahoma@gmail.com> 4.4.0-0.rc1.git3.990.surfacepro3
-- new package built with tito
+* Thu Dec 10 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc4.git3.1
+- Linux v4.4-rc4-86-g6764e5e
+
+* Thu Dec 10 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix rfkill issues on ideapad Y700-17ISK (rhbz 1286293)
+
+* Wed Dec 09 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc4.git2.1
+- Linux v4.4-rc4-48-gaa53685
+
+* Tue Dec 08 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc4.git1.1
+- Linux v4.4-rc4-16-g62ea1ec
+- Reenable debugging options.
+
+* Mon Dec 07 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc4.git0.1
+- Linux v4.4-rc4
+- Disable debugging options.
+
+* Fri Dec 04 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc3.git4.1
+- Linux v4.4-rc3-171-g071f5d1
+
+* Thu Dec 03 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc3.git3.1
+- Linux v4.4-rc3-24-g25364a9
+
+* Thu Dec 03 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- Add patch to fix palm rejection on certain touchpads (rhbz 1287819)
+
+* Wed Dec 02 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc3.git2.1
+- Linux v4.4-rc3-8-g6a24e72
+
+* Tue Dec 01 2015 Laura Abbott <labbott@redhat.com>
+- Enable CONFIG_X86_INTEL_MPX (rhbz 1287279)
+
+* Tue Dec 01 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-7515 aiptek: crash on invalid device descriptors (rhbz 1285326 1285331)
+- CVE-2015-7833 usbvision: crash on invalid device descriptors (rhbz 1270158 1270160)
+
+* Tue Dec 01 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc3.git1.1
+- Linux v4.4-rc3-5-g2255702
+- Reenable debugging options.
+
+* Mon Nov 30 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc3.git0.1
+- Linux v4.4-rc3
+- Fix for cgroup use after free (rhbz 1282706)
+- Disable debugging options.
+
+* Wed Nov 25 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc2.git2.1
+- Linux v4.4-rc2-44-g6ffeba9
+
+* Tue Nov 24 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc2.git1.1
+- Linux v4.4-rc2-3-ga293154
+- Reenable debugging options.
+
+* Mon Nov 23 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Update AMD xgbe driver for 4.4
+
+* Mon Nov 23 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc2.git0.1
+- Linux v4.4-rc2
+- Disable debugging options.
+
+* Sun Nov 22 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Fix sound issue on some ARM devices (tested on Arndale)
 
 * Fri Nov 20 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc1.git3.1
 - Linux v4.4-rc1-223-g86eaf54
