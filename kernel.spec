@@ -489,8 +489,8 @@ Source5005: kbuild-AFTER_LINK.patch
 # Git trees.
 
 #Surface Pro 3
-Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
-Patch9998: Add-Microsoft-Surface-camera-support.patch
+Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+Patch9999: uvcvideo-Enable-UVC-1.5-device-detection.patch
 
 # Standalone patches
 
