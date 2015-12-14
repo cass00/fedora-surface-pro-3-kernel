@@ -2045,9 +2045,6 @@ fi
 #
 # 
 %changelog
-* Mon Dec 14 2015 Donavan Lance <tusklahoma@gmail.com> 4.4.0-0.rc4.git4.990.surfacepro3
-- new package built with tito
-
 * Fri Dec 11 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc4.git4.1
 - Linux v4.4-rc4-113-g0bd0f1e
 
