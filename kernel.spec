@@ -494,10 +494,11 @@ Patch05: kbuild-AFTER_LINK.patch
 
 # Git trees.
 
-# Surface Pro 3
-Patch9997: uvcvideo-Enable-UVC-1.5-device-detection.patch
-Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
-Patch9999: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
+# Microsoft Surface
+Patch9996: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
+Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+Patch9998: Microsoft-Surface-Pro-4-Surface-Book-camera-support.patch
+Patch9999: uvcvideo-Enable-UVC-1.5-device-detection.patch
 
 # Standalone patches
 
@@ -1240,10 +1241,11 @@ ApplyPatch kbuild-AFTER_LINK.patch
 
 %if !%{nopatches}
 
-# Surface Pro 3
-ApplyPatch uvcvideo-Enable-UVC-1.5-device-detection.patch
-ApplyPatch Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+# Microsoft Surface
 ApplyPatch surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
+ApplyPatch Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+ApplyPatch Microsoft-Surface-Pro-4-Surface-Book-camera-support.patch
+ApplyPatch uvcvideo-Enable-UVC-1.5-device-detection.patch
 
 # Architecture patches
 # x86(-64)
