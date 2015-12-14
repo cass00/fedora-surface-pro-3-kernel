@@ -489,7 +489,8 @@ Source5005: kbuild-AFTER_LINK.patch
 # Git trees.
 
 # Microsoft Surface
-Patch9996: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
+Patch9995: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
+Patch9996: HID-multitouch-Add-MT_QUIRK_NOT_SEEN_MEANS_UP-to-MT_.patch
 Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
 Patch9998: Microsoft-Surface-Pro-4-Surface-Book-camera-support.patch
 Patch9999: uvcvideo-Enable-UVC-1.5-device-detection.patch
