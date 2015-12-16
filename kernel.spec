@@ -52,7 +52,7 @@ Summary: The Linux kernel
 %if 0%{?released_kernel}
 
 # Do we have a -stable update to apply?
-%define stable_update 7
+%define stable_update 8
 # Set rpm version accordingly
 %if 0%{?stable_update}
 %define stablerev %{stable_update}
@@ -616,9 +616,6 @@ Patch513: nv46-Change-mc-subdev-oclass-from-nv44-to-nv4c.patch
 Patch517: vmwgfx-Rework-device-initialization.patch
 Patch518: drm-vmwgfx-Allow-dropped-masters-render-node-like-ac.patch
 
-#CVE-2015-7990 rhbz 1276437 1276438
-Patch524: RDS-fix-race-condition-when-sending-a-message-on-unb.patch
-
 #rhbz 1272172
 Patch540: 0001-KEYS-Fix-crash-when-attempt-to-garbage-collect-an-un.patch
 Patch541: 0002-KEYS-Don-t-permit-request_key-to-construct-a-new-key.patch
@@ -641,16 +638,10 @@ Patch556: netfilter-ipset-Fix-extension-alignment.patch
 Patch557: netfilter-ipset-Fix-hash-type-expiration.patch
 Patch558: netfilter-ipset-Fix-hash-type-expire-release-empty-h.patch
 
-#rhbz 1272571
-Patch559: 0001-ipv6-Avoid-creating-RTF_CACHE-from-a-rt-that-is-not-.patch
-
 #rhbz 1278688
 Patch560: 0001-KVM-x86-build-kvm_userspace_memory_region-in-x86_set.patch
 Patch561: 0002-KVM-x86-map-unmap-private-slots-in-__x86_set_memory_.patch
 Patch562: 0003-KVM-x86-fix-previous-commit-for-32-bit.patch
-
-#CVE-2015-8374 rhbz 1286261 1286262
-Patch565: Btrfs-fix-truncation-of-compressed-and-inlined-exten.patch
 
 #rhbz 1284059
 Patch566: KEYS-Fix-handling-of-stored-error-in-a-negatively-in.patch
@@ -667,14 +658,14 @@ Patch570: HID-multitouch-enable-palm-rejection-if-device-imple.patch
 #rhbz 1286293
 Patch571: ideapad-laptop-Add-Lenovo-ideapad-Y700-17ISK-to-no_h.patch
 
-#CVE-2013-7446 rhbz 1282688 1282712
-Patch573: unix-avoid-use-after-free-in-ep_remove_wait_queue.patch
-
 #CVE-XXXX-XXXX rhbz 1291329 1291332
 Patch574: ovl-fix-permission-checking-for-setattr.patch
 
 #CVE-2015-7550 rhbz 1291197 1291198
 Patch575: KEYS-Fix-race-between-read-and-revoke.patch
+
+#CVE-2015-8543 rhbz 1290475 1290477
+Patch576: net-add-validation-for-the-socket-syscall-protocol-a.patch
 
 # END OF PATCH DEFINITIONS
 
@@ -2120,6 +2111,12 @@ fi
 #
 # 
 %changelog
+* Tue Dec 15 2015 Justin Forbes <jforbes@fedoraproject.org> - 4.2.8-300
+- Linux v4.2.8
+
+* Tue Dec 15 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-8543 ipv6: DoS via NULL pointer dereference (rhbz 1290475 1290477)
+
 * Mon Dec 14 2015 Josh Boyer <jwboyer@fedoraproject.org>
 - CVE-2015-7550 Race between read and revoke keys (rhbz 1291197 1291198)
 - CVE-XXXX-XXXX permission bypass on overlayfs (rhbz 1291329 1291332)
@@ -2130,7 +2127,7 @@ fi
 * Thu Dec 10 2015 Josh Boyer <jwboyer@fedoraproject.org>
 - Fix rfkill issues on ideapad Y700-17ISK (rhbz 1286293)
 
-* Wed Dec 09 2015 <jmforbes@fedoraproject.org> - 4.2.7-300
+* Wed Dec 09 2015 Justin Forbes <jforbes@fedoraproject.org> - 4.2.7-300
 - Linux v4.2.7
 
 * Thu Dec 03 2015 Josh Boyer <jwboyer@fedoraproject.org>
