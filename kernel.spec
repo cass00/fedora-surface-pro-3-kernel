@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 5
+%define rcrev 6
 # The git snapshot level
-%define gitrev 1
+%define gitrev 0
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -596,9 +596,6 @@ Patch508: kexec-uefi-copy-secure_boot-flag-in-boot-params.patch
 #CVE-2015-7833 rhbz 1270158 1270160
 Patch567: usbvision-fix-crash-on-detecting-device-with-invalid.patch
 
-#CVE-2015-7515 rhbz 1285326 1285331
-Patch568: Input-aiptek-fix-crash-on-detecting-device-without-e.patch
-
 #rhbz 1287819
 Patch570: HID-multitouch-enable-palm-rejection-if-device-imple.patch
 
@@ -610,9 +607,6 @@ Patch572: alua_fix.patch
 
 #CVE-2015-7550 rhbz 1291197 1291198
 Patch575: KEYS-Fix-race-between-read-and-revoke.patch
-
-#CVE-2015-8543 rhbz 1290475 1290477
-Patch576: net-add-validation-for-the-socket-syscall-protocol-a.patch
 
 #rhbz 1275718
 Patch577: 0001-device-property-always-check-for-fwnode-type.patch
@@ -2075,6 +2069,26 @@ fi
 #
 # 
 %changelog
+* Mon Dec 21 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc6.git0.1
+- Linux v4.4-rc6
+- Disable debugging options.
+
+* Fri Dec 18 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc5.git3.1
+- Linux v4.4-rc5-168-g73796d8
+
+* Thu Dec 17 2015 Laura Abbott <labbott@redhat.com>
+- Enable XEN_PVN support (rhbz 1211904)
+
+* Thu Dec 17 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc5.git2.1
+- Linux v4.4-rc5-25-ga5e90b1
+- Reenable debugging options.
+
+* Thu Dec 17 2015 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-8569 info leak from getsockname (rhbz 1292045 1292047)
+
+* Wed Dec 16 2015 Laura Abbott <labbott@redhat.com>
+- Enable a set of RDMA drivers (rhbz 1291902)
+
 * Wed Dec 16 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc5.git1.1
 - Linux v4.4-rc5-18-gedb42dc
 
