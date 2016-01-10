@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 6
+%define rcrev 8
 # The git snapshot level
-%define gitrev 0
+%define gitrev 3
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -122,7 +122,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 1
+%define debugbuildsenabled 0
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -605,26 +605,31 @@ Patch571: ideapad-laptop-Add-Lenovo-ideapad-Y700-17ISK-to-no_h.patch
 #rhbz 1288687
 Patch572: alua_fix.patch
 
-#CVE-2015-7550 rhbz 1291197 1291198
-Patch575: KEYS-Fix-race-between-read-and-revoke.patch
+#CVE-2015-8709 rhbz 1295287 1295288
+Patch603: ptrace-being-capable-wrt-a-process-requires-mapped-u.patch
+
+Patch604: drm-i915-shut-up-gen8-SDE-irq-dmesg-noise-again.patch
 
 #rhbz 1275718
-Patch577: 0001-device-property-always-check-for-fwnode-type.patch
-Patch578: 0002-device-property-rename-helper-functions.patch
-Patch579: 0003-device-property-refactor-built-in-properties-support.patch
-Patch580: 0004-device-property-keep-single-value-inplace.patch
-Patch581: 0005-device-property-helper-macros-for-property-entry-cre.patch
-Patch582: 0006-device-property-improve-readability-of-macros.patch
-Patch583: 0007-device-property-return-EINVAL-when-property-isn-t-fo.patch
-Patch584: 0008-device-property-Fallback-to-secondary-fwnode-if-prim.patch
-Patch585: 0009-device-property-Take-a-copy-of-the-property-set.patch
-Patch586: 0010-driver-core-platform-Add-support-for-built-in-device.patch
-Patch587: 0011-driver-core-Do-not-overwrite-secondary-fwnode-with-N.patch
-Patch588: 0012-mfd-core-propagate-device-properties-to-sub-devices-.patch
-Patch589: 0013-mfd-intel-lpss-Add-support-for-passing-device-proper.patch
-Patch590: 0014-mfd-intel-lpss-Pass-SDA-hold-time-to-I2C-host-contro.patch
-Patch591: 0015-mfd-intel-lpss-Pass-HSUART-configuration-via-propert.patch
-Patch592: 0016-i2c-designware-Convert-to-use-unified-device-propert.patch
+Patch605: 0001-device-property-always-check-for-fwnode-type.patch
+Patch606: 0002-device-property-rename-helper-functions.patch
+Patch607: 0003-device-property-refactor-built-in-properties-support.patch
+Patch608: 0004-device-property-keep-single-value-inplace.patch
+Patch609: 0005-device-property-helper-macros-for-property-entry-cre.patch
+Patch610: 0006-device-property-improve-readability-of-macros.patch
+Patch611: 0007-device-property-return-EINVAL-when-property-isn-t-fo.patch
+Patch612: 0008-device-property-Fallback-to-secondary-fwnode-if-prim.patch
+Patch613: 0009-device-property-Take-a-copy-of-the-property-set.patch
+Patch614: 0010-driver-core-platform-Add-support-for-built-in-device.patch
+Patch615: 0011-driver-core-Do-not-overwrite-secondary-fwnode-with-N.patch
+Patch616: 0012-mfd-core-propagate-device-properties-to-sub-devices-.patch
+Patch617: 0013-mfd-intel-lpss-Add-support-for-passing-device-proper.patch
+Patch618: 0014-mfd-intel-lpss-Pass-SDA-hold-time-to-I2C-host-contro.patch
+Patch619: 0015-mfd-intel-lpss-Pass-HSUART-configuration-via-propert.patch
+Patch620: 0016-i2c-designware-Convert-to-use-unified-device-propert.patch
+
+#rhbz 1295646
+Patch621: drm-udl-Use-unlocked-gem-unreferencing.patch
 
 # END OF PATCH DEFINITIONS
 
@@ -2069,6 +2074,43 @@ fi
 #
 # 
 %changelog
+* Fri Jan 08 2016 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc8.git3.1
+- Linux v4.4-rc8-36-g02006f7a
+
+* Thu Jan 07 2016 Laura Abbott <labbott@redhat.com>
+- Fix unlocked gem warning (rhbz 1295646)
+
+* Thu Jan 07 2016 Laura Abbott <labbott@redhat.com>
+- Bring back patches for Lenovo Yoga touchpad (rhbz 1275718)
+
+* Thu Jan 07 2016 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc8.git2.1
+- Linux v4.4-rc8-26-gb06f3a1
+
+* Thu Jan 07 2016 Josh Boyer <jwboyer@fedorparoject.org>
+- Quiet i915 gen8 irq messages
+
+* Wed Jan 06 2016 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc8.git1.1
+- Linux v4.4-rc8-5-gee9a7d2
+- Reenable debugging options.
+
+* Tue Jan 05 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-8709 ptrace: potential priv escalation with userns (rhbz 1295287 1295288)
+
+* Tue Jan 05 2016 Laura Abbott <labbott@redhat.com>
+- Drop patches for Lenovo Yoga Touchpad (rhbz 1275718)
+
+* Mon Jan 04 2016 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc8.git0.1
+- Linux v4.4-rc8
+- Disable debugging options.
+
+* Sun Dec 27 2015 Peter Robinson <pbrobinson@fedoraproject.org>
+- Minor ARMv7/aarch64/ppc/s390 config cleanups
+- Enable rk3368 aarch64 platforms
+
+* Wed Dec 23 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc6.git1.1
+- Linux v4.4-rc6-23-g24bc3ea
+- Reenable debugging options.
+
 * Mon Dec 21 2015 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc6.git0.1
 - Linux v4.4-rc6
 - Disable debugging options.
