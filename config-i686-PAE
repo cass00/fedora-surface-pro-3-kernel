@@ -6,6 +6,3 @@ CONFIG_XEN_SYS_HYPERVISOR=y
 
 # I2O only works on non-PAE 32-bit x86
 # CONFIG_I2O is not set
-
-# Don't build Surface Pro 3 hardware button support for 32-bit
-# CONFIG_SURFACE_PRO3_BUTTON is not set

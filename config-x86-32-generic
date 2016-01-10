@@ -220,6 +220,3 @@ CONFIG_OF=y
 # CONFIG_COMMON_CLK_QCOM is not set
 # CONFIG_DRM_PANEL_SHARP_LQ101R1SX01 is not set
 # CONFIG_KEYBOARD_BCM is not set
-
-# Don't build Surface Pro 3 hardware button support for 32-bit
-# CONFIG_SURFACE_PRO3_BUTTON is not set

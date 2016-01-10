@@ -210,6 +210,5 @@ CONFIG_NO_HZ_FULL=y
 # CONFIG_NO_HZ_FULL_SYSIDLE is not set
 # CONFIG_CONTEXT_TRACKING_FORCE is not set
 
-# Enable Surface Pro 3 support
-CONFIG_SURFACE_PRO3_BUTTON=y
+# Build multitouch module in kernel for early boot keyboard support
 CONFIG_HID_MULTITOUCH=y
