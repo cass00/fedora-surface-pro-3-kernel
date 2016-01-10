@@ -493,7 +493,6 @@ Source5005: kbuild-AFTER_LINK.patch
 # Git trees.
 
 # Microsoft Surface
-Patch9994: surface-pro-3-Add-support-driver-for-Surface-Pro-3-b.patch
 Patch9995: HID-multitouch-Ignore-invalid-reports.patch
 Patch9996: HID-multitouch-Add-MT_QUIRK_NOT_SEEN_MEANS_UP-to-MT_.patch
 Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
