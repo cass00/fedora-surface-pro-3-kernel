@@ -46,7 +46,7 @@ Summary: The Linux kernel
 # base_sublevel is the kernel version we're starting with and patching
 # on top of -- for example, 3.1-rc7-git1 starts with a 3.0 base,
 # which yields a base_sublevel of 0.
-%define base_sublevel 3
+%define base_sublevel 4
 
 ## If this is a released kernel ##
 %if 0%{?released_kernel}
@@ -65,9 +65,9 @@ Summary: The Linux kernel
 # The next upstream release sublevel (base_sublevel+1)
 %define upstream_sublevel %(echo $((%{base_sublevel} + 1)))
 # The rc snapshot level
-%define rcrev 8
+%define rcrev 0
 # The git snapshot level
-%define gitrev 3
+%define gitrev 8
 # Set rpm version accordingly
 %define rpmversion 4.%{upstream_sublevel}.0
 %endif
@@ -513,8 +513,6 @@ Patch456: arm64-acpi-drop-expert-patch.patch
 
 Patch457: ARM-tegra-usb-no-reset.patch
 
-Patch460: mfd-wm8994-Ensure-that-the-whole-MFD-is-built-into-a.patch
-
 Patch463: arm-i.MX6-Utilite-device-dtb.patch
 
 Patch466: input-kill-stupid-messages.patch
@@ -589,47 +587,27 @@ Patch501: Input-synaptics-pin-3-touches-when-the-firmware-repo.patch
 
 Patch502: firmware-Drop-WARN-from-usermodehelper_read_trylock-.patch
 
-Patch503: drm-i915-turn-off-wc-mmaps.patch
+# Patch503: drm-i915-turn-off-wc-mmaps.patch
 
 Patch508: kexec-uefi-copy-secure_boot-flag-in-boot-params.patch
-
-#CVE-2015-7833 rhbz 1270158 1270160
-Patch567: usbvision-fix-crash-on-detecting-device-with-invalid.patch
-
-#rhbz 1287819
-Patch570: HID-multitouch-enable-palm-rejection-if-device-imple.patch
 
 #rhbz 1286293
 Patch571: ideapad-laptop-Add-Lenovo-ideapad-Y700-17ISK-to-no_h.patch
 
-#rhbz 1288687
-Patch572: alua_fix.patch
-
 #CVE-2015-8709 rhbz 1295287 1295288
 Patch603: ptrace-being-capable-wrt-a-process-requires-mapped-u.patch
 
-Patch604: drm-i915-shut-up-gen8-SDE-irq-dmesg-noise-again.patch
-
-#rhbz 1275718
-Patch605: 0001-device-property-always-check-for-fwnode-type.patch
-Patch606: 0002-device-property-rename-helper-functions.patch
-Patch607: 0003-device-property-refactor-built-in-properties-support.patch
-Patch608: 0004-device-property-keep-single-value-inplace.patch
-Patch609: 0005-device-property-helper-macros-for-property-entry-cre.patch
-Patch610: 0006-device-property-improve-readability-of-macros.patch
-Patch611: 0007-device-property-return-EINVAL-when-property-isn-t-fo.patch
-Patch612: 0008-device-property-Fallback-to-secondary-fwnode-if-prim.patch
-Patch613: 0009-device-property-Take-a-copy-of-the-property-set.patch
-Patch614: 0010-driver-core-platform-Add-support-for-built-in-device.patch
-Patch615: 0011-driver-core-Do-not-overwrite-secondary-fwnode-with-N.patch
-Patch616: 0012-mfd-core-propagate-device-properties-to-sub-devices-.patch
-Patch617: 0013-mfd-intel-lpss-Add-support-for-passing-device-proper.patch
-Patch618: 0014-mfd-intel-lpss-Pass-SDA-hold-time-to-I2C-host-contro.patch
-Patch619: 0015-mfd-intel-lpss-Pass-HSUART-configuration-via-propert.patch
-Patch620: 0016-i2c-designware-Convert-to-use-unified-device-propert.patch
-
 #rhbz 1295646
 Patch621: drm-udl-Use-unlocked-gem-unreferencing.patch
+
+#CVE-2015-7566 rhbz 1296466 1297517
+Patch623: usb-serial-visor-fix-crash-on-detecting-device-witho.patch
+
+#CVE-2016-0723 rhbz 1296253 1300224
+Patch637: tty-Fix-unsafe-ldisc-reference-via-ioctl-TIOCGETD.patch
+
+#rhbz 1279653
+Patch638: rtlwifi-rtl8821ae-Fix-5G-failure-when-EEPROM-is-inco.patch
 
 # END OF PATCH DEFINITIONS
 
@@ -1750,6 +1728,8 @@ find $RPM_BUILD_ROOT/usr/include \
 %{perf_make} DESTDIR=$RPM_BUILD_ROOT lib=%{_lib} install-bin install-traceevent-plugins
 # remove the 'trace' symlink.
 rm -f %{buildroot}%{_bindir}/trace
+# remove the perf-tips
+rm -rf %{buildroot}%{_docdir}/perf-tip
 
 # python-perf extension
 %{perf_make} DESTDIR=$RPM_BUILD_ROOT install-python_ext
@@ -2074,6 +2054,57 @@ fi
 #
 # 
 %changelog
+* Thu Jan 21 2016 Justin M. Forbes <jforbes@fedoraproject.org> - 4.5.0-0.rc0.git8.1
+- Linux v4.4-10062-g30f0530
+
+* Thu Jan 21 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix incorrect country code issue on RTL8812AE devices (rhbz 1279653)
+
+* Wed Jan 20 2016 Justin M. Forbes <jforbes@fedoraproject.org> - 4.5.0-0.rc0.git7.1
+- Linux v4.4-8950-g2b4015e
+
+* Wed Jan 20 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-0723 memory disclosure and crash in tty layer (rhbz 1296253 1300224)
+
+* Tue Jan 19 2016 Justin M. Forbes <jforbes@fedoraproject.org> - 4.5.0-0.rc0.git6.1
+- Linux v4.4-8855-ga200dcb
+- CVE-2016-0728 Keys: reference leak in join_session_keyring (rhbz 1296623)
+
+* Tue Jan 19 2016 Peter Robinson <pbrobinson@fedoraproject.org>
+- Fix boot on TI am33xx/omap devices
+
+* Mon Jan 18 2016 Justin M. Forbes <jforbes@fedoraproject.org> - 4.5.0-0.rc0.git5.1
+- Linux v4.4-8606-g5807fca
+
+* Sun Jan 17 2016 Peter Robinson <pbrobinson@fedoraproject.org>
+- Minor updates and cleanups to aarch64/ARMv7/PowerPC
+- ARM: enable nvmem drivers
+- Build usb gadget/OTG on aarch64
+
+* Fri Jan 15 2016 Justin M. Forbes <jforbes@fedoraproject.org> - 4.5.0-0.rc0.git4.1
+- Linux v4.4-5966-g7d1fc01
+
+* Thu Jan 14 2016 Justin M. Forbes <jforbes@fedoraproject.org> - 4.5.0-0.rc0.git3.1
+- Linux v4.4-5593-g7fdec82
+
+* Wed Jan 13 2016 Justin M. Forbes <jforbes@fedoraproject.org> - 4.5.0-0.rc0.git2.1
+- Linux v4.4-3408-g6799060
+
+* Tue Jan 12 2016 Justin M. Forbes <jforbes@fedoraproject.org>
+- drop i915 patch to turn off wc mmaps
+
+* Tue Jan 12 2016 Justin M. Forbes <jforbes@fedoraproject.org> - 4.5.0-0.rc0.git1.1
+- Linux v4.4-1175-g03891f9
+- Reenable debugging options.
+
+* Tue Jan 12 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-7566 usb: visor: Crash on invalid USB dev descriptors (rhbz 1296466 1297517)
+- Fix backtrace from PNP conflict on Broadwell (rhbz 1083853)
+
+* Mon Jan 11 2016 Laura Abbott <labbott@redhat.com> - 4.4.0-1
+- Linux v4.4
+- Disable debugging options.
+
 * Fri Jan 08 2016 Laura Abbott <labbott@redhat.com> - 4.4.0-0.rc8.git3.1
 - Linux v4.4-rc8-36-g02006f7a
 
