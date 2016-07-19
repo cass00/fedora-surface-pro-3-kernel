@@ -1,0 +1,34 @@
+From patchwork Fri Jul 15 13:37:05 2016
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: [2/2] mwifiex: update command response skb length correctly
+From: Amitkumar Karwar <akarwar@marvell.com>
+X-Patchwork-Id: 9232093
+Message-Id: <1468589825-9188-2-git-send-email-akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Cathy Luo <cluo@marvell.com>, Nishant Sarmukadam <nishants@marvell.com>,
+ Amitkumar Karwar <akarwar@marvell.com>
+Date: Fri, 15 Jul 2016 19:07:05 +0530
+
+Same skb is being reused for storing command response from firmware
+in PCIe chipsets. There was a bug while updating the skb length.
+This patch ensures skb length correctly gets updated based on rx_len.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 38bd62e..a6af85d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -1616,6 +1616,7 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
+ 
+ 	pkt_len = *((__le16 *)skb->data);
+ 	rx_len = le16_to_cpu(pkt_len);
++	skb_put(skb, MWIFIEX_UPLD_SIZE - skb->len);
+ 	skb_trim(skb, rx_len);
+ 	skb_pull(skb, INTF_HEADER_LEN);
+ 

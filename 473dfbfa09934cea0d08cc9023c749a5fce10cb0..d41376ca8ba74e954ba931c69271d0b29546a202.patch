@@ -1,0 +1,46 @@
+From d41376ca8ba74e954ba931c69271d0b29546a202 Mon Sep 17 00:00:00 2001
+From: Brian Norris <briannorris@chromium.org>
+Date: Thu, 30 Jun 2016 15:21:02 -0700
+Subject: mwifiex: mask PCIe interrupts before removal
+
+The PCIe driver didn't mask the host interrupts before trying to tear
+down. This causes lockups at reboot or rmmod when using MSI-X on 8997,
+since the MSI handler gets confused and locks up the system.
+
+Also tested on 8897, which does not support MSI-X (and wasn't
+experiencing this same bug). No regressions seen there.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Douglas Anderson <dianders@chromium.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 012733c..c7f5df8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -440,6 +440,11 @@ static int mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
+ 	return 0;
+ }
+ 
++static void mwifiex_pcie_disable_host_int_noerr(struct mwifiex_adapter *adapter)
++{
++	WARN_ON(mwifiex_pcie_disable_host_int(adapter));
++}
++
+ /*
+  * This function enables the host interrupt.
+  *
+@@ -2946,6 +2951,7 @@ static struct mwifiex_if_ops pcie_ops = {
+ 	.register_dev =			mwifiex_register_dev,
+ 	.unregister_dev =		mwifiex_unregister_dev,
+ 	.enable_int =			mwifiex_pcie_enable_host_int,
++	.disable_int =			mwifiex_pcie_disable_host_int_noerr,
+ 	.process_int_status =		mwifiex_process_int_status,
+ 	.host_to_card =			mwifiex_pcie_host_to_card,
+ 	.wakeup =			mwifiex_pm_wakeup_card,
+-- 
+cgit v0.12
+

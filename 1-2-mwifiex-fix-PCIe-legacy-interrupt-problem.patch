@@ -1,0 +1,48 @@
+From patchwork Fri Jul 15 13:37:04 2016
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: [1/2] mwifiex: fix PCIe legacy interrupt problem
+From: Amitkumar Karwar <akarwar@marvell.com>
+X-Patchwork-Id: 9232091
+Message-Id: <1468589825-9188-1-git-send-email-akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Cathy Luo <cluo@marvell.com>, Nishant Sarmukadam <nishants@marvell.com>,
+ Amitkumar Karwar <akarwar@marvell.com>
+Date: Fri, 15 Jul 2016 19:07:04 +0530
+
+In corner case, we may end up processing same interrupt twice.
+We have a logic to read pending interrupts at the end of interrupt
+processing routine. It has a race with interrupts read in interrupt
+handler. This patch solves the problem by ORing the interrupt bitmap
+in this case.
+
+The symptom for this bug is below messages in dmesg log.
+
+[   11.522123] mwifiex_pcie 0000:01:00.0: CMD_RESP: invalid cmd resp
+[   11.680412] mwifiex_pcie 0000:01:00.0: There is no command but got cmdrsp
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=109681
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index d61d4ad..38bd62e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2300,6 +2300,12 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
+ 			}
+ 
+ 		}
++		if (!card->msi_enable) {
++			spin_lock_irqsave(&adapter->int_lock, flags);
++			pcie_ireg |= adapter->int_status;
++			adapter->int_status = 0;
++			spin_unlock_irqrestore(&adapter->int_lock, flags);
++		}
+ 	}
+ 	mwifiex_dbg(adapter, INTR,
+ 		    "info: cmd_sent=%d data_sent=%d\n",

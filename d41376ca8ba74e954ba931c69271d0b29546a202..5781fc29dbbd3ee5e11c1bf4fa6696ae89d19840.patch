@@ -1,0 +1,111 @@
+From 5781fc29dbbd3ee5e11c1bf4fa6696ae89d19840 Mon Sep 17 00:00:00 2001
+From: Shengzhen Li <szli@marvell.com>
+Date: Fri, 1 Jul 2016 18:26:52 +0530
+Subject: mwifiex: fix interrupt processing corner case in MSI mode
+
+As interrupt is read in interrupt handler as well as interrupt processing
+thread, we observed a corner case issue for MSI in which interrupt gets
+processed twice.
+
+This patch moves interrupt reading code for MSI mode from
+mwifiex_interrupt_status() to mwifiex_pcie_process_int() to avoid the
+issue.
+
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 50 ++++++++++++++++++++++++++---
+ 1 file changed, 46 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index c7f5df8..22fe993 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2091,6 +2091,13 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter,
+ 	unsigned long flags;
+ 	struct pcie_service_card *card = adapter->card;
+ 
++	if (card->msi_enable) {
++		spin_lock_irqsave(&adapter->int_lock, flags);
++		adapter->int_status = 1;
++		spin_unlock_irqrestore(&adapter->int_lock, flags);
++		return;
++	}
++
+ 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
+ 		return;
+ 
+@@ -2192,15 +2199,44 @@ exit:
+ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
+ {
+ 	int ret;
+-	u32 pcie_ireg;
++	u32 pcie_ireg = 0;
+ 	unsigned long flags;
++	struct pcie_service_card *card = adapter->card;
+ 
+ 	spin_lock_irqsave(&adapter->int_lock, flags);
+-	/* Clear out unused interrupts */
+-	pcie_ireg = adapter->int_status;
++	if (!card->msi_enable) {
++		/* Clear out unused interrupts */
++		pcie_ireg = adapter->int_status;
++	}
+ 	adapter->int_status = 0;
+ 	spin_unlock_irqrestore(&adapter->int_lock, flags);
+ 
++	if (card->msi_enable) {
++		if (mwifiex_pcie_ok_to_access_hw(adapter)) {
++			if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS,
++					     &pcie_ireg)) {
++				mwifiex_dbg(adapter, ERROR,
++					    "Read register failed\n");
++				return -1;
++			}
++
++			if ((pcie_ireg != 0xFFFFFFFF) && (pcie_ireg)) {
++				if (mwifiex_write_reg(adapter,
++						      PCIE_HOST_INT_STATUS,
++						      ~pcie_ireg)) {
++					mwifiex_dbg(adapter, ERROR,
++						    "Write register failed\n");
++					return -1;
++				}
++				if (!adapter->pps_uapsd_mode &&
++				    adapter->ps_state == PS_STATE_SLEEP) {
++					adapter->ps_state = PS_STATE_AWAKE;
++					adapter->pm_wakeup_fw_try = false;
++					del_timer(&adapter->wakeup_timer);
++				}
++			}
++		}
++	}
+ 	while (pcie_ireg & HOST_INTR_MASK) {
+ 		if (pcie_ireg & HOST_INTR_DNLD_DONE) {
+ 			pcie_ireg &= ~HOST_INTR_DNLD_DONE;
+@@ -2240,6 +2276,12 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
+ 				return ret;
+ 		}
+ 
++		if (card->msi_enable) {
++			spin_lock_irqsave(&adapter->int_lock, flags);
++			adapter->int_status = 0;
++			spin_unlock_irqrestore(&adapter->int_lock, flags);
++		}
++
+ 		if (mwifiex_pcie_ok_to_access_hw(adapter)) {
+ 			if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS,
+ 					     &pcie_ireg)) {
+@@ -2263,7 +2305,7 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
+ 	mwifiex_dbg(adapter, INTR,
+ 		    "info: cmd_sent=%d data_sent=%d\n",
+ 		    adapter->cmd_sent, adapter->data_sent);
+-	if (adapter->ps_state != PS_STATE_SLEEP)
++	if (!card->msi_enable && adapter->ps_state != PS_STATE_SLEEP)
+ 		mwifiex_pcie_enable_host_int(adapter);
+ 
+ 	return 0;
+-- 
+cgit v0.12
+
