@@ -496,11 +496,10 @@ Source5005: kbuild-AFTER_LINK.patch
 # Git trees.
 
 # Microsoft Surface
-Patch9995: HID-multitouch-Ignore-invalid-reports.patch
-Patch9996: HID-multitouch-Add-MT_QUIRK_NOT_SEEN_MEANS_UP-to-MT_.patch
-Patch9997: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
-Patch9998: Microsoft-Surface-Pro-4-Surface-Book-camera-support.patch
-Patch9999: uvcvideo-Enable-UVC-1.5-device-detection.patch
+Patch9996: HID-multitouch-Ignore-invalid-reports.patch
+Patch9997: HID-multitouch-Add-MT_QUIRK_NOT_SEEN_MEANS_UP-to-MT_.patch
+Patch9998: Add-multitouch-support-for-Microsoft-Type-Cover-3.patch
+Patch9999: Microsoft-Surface-Pro-4-Surface-Book-camera-support.patch
 
 # Standalone patches
 Patch420: arm64-avoid-needing-console-to-enable-serial-console.patch
