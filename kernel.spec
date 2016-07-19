@@ -11,10 +11,12 @@ Summary: The Linux kernel
 # Sign modules on x86.  Make sure the config files match this setting if more
 # architectures are added.
 %ifarch %{ix86} x86_64
+%global signkernel 1
 %global signmodules 1
 %global zipmodules 1
 %else
-%global signmodules 0
+%global signkernel 0
+%global signmodules 1
 %global zipmodules 0
 %endif
 
@@ -46,13 +48,13 @@ Summary: The Linux kernel
 # base_sublevel is the kernel version we're starting with and patching
 # on top of -- for example, 3.1-rc7-git1 starts with a 3.0 base,
 # which yields a base_sublevel of 0.
-%define base_sublevel 3
+%define base_sublevel 5
 
 ## If this is a released kernel ##
 %if 0%{?released_kernel}
 
 # Do we have a -stable update to apply?
-%define stable_update 3
+%define stable_update 7
 # Set rpm version accordingly
 %if 0%{?stable_update}
 %define stablerev %{stable_update}
@@ -90,6 +92,7 @@ Summary: The Linux kernel
 %define with_debug     %{?_without_debug:     0} %{?!_without_debug:     1}
 # kernel-headers
 %define with_headers   %{?_without_headers:   0} %{?!_without_headers:   1}
+%define with_cross_headers   %{?_without_cross_headers:   0} %{?!_without_cross_headers:   1}
 # perf
 %define with_perf      %{?_without_perf:      0} %{?!_without_perf:      1}
 # tools
@@ -227,6 +230,7 @@ Summary: The Linux kernel
 %ifarch noarch
 %define with_up 0
 %define with_headers 0
+%define with_cross_headers 0
 %define with_tools 0
 %define with_perf 0
 %define all_arch_configs kernel-%{version}-*.config
@@ -291,6 +295,7 @@ Summary: The Linux kernel
 # just like we used to only build them on i386 for x86
 %ifnarch armv7hl
 %define with_headers 0
+%define with_cross_headers 0
 %define with_perf 0
 %define with_tools 0
 %endif
@@ -342,7 +347,7 @@ Summary: The Linux kernel
 # Packages that need to be installed before the kernel is, because the %%post
 # scripts use them.
 #
-%define kernel_prereq  fileutils, systemd >= 203-2
+%define kernel_prereq  fileutils, systemd >= 203-2, /usr/bin/kernel-install
 %define initrd_prereq  dracut >= 027
 
 
@@ -388,13 +393,11 @@ BuildRequires: rpm-build, elfutils
 %define debuginfo_args --strict-build-id -r
 %endif
 
-%ifarch %{ix86} x86_64
-# MODULE_SIG is enabled in config-x86-generic and needs these:
+%if %{signkernel}%{signmodules}
 BuildRequires: openssl openssl-devel
-%endif
-
-%if %{signmodules}
+%if %{signkernel}
 BuildRequires: pesign >= 0.10-4
+%endif
 %endif
 
 %if %{with_cross}
@@ -500,28 +503,41 @@ Patch9998: Microsoft-Surface-Pro-4-Surface-Book-camera-support.patch
 Patch9999: uvcvideo-Enable-UVC-1.5-device-detection.patch
 
 # Standalone patches
+Patch420: arm64-avoid-needing-console-to-enable-serial-console.patch
 
-Patch451: lib-cpumask-Make-CPUMASK_OFFSTACK-usable-without-deb.patch
+Patch421: arm64-acpi-drop-expert-patch.patch
 
-Patch452: amd-xgbe-a0-Add-support-for-XGBE-on-A0.patch
+# http://www.spinics.net/lists/arm-kernel/msg490981.html
+Patch422: geekbox-v4-device-tree-support.patch
 
-Patch453: amd-xgbe-phy-a0-Add-support-for-XGBE-PHY-on-A0.patch
+# http://www.spinics.net/lists/arm-kernel/msg483898.html
+Patch423: Initial-AllWinner-A64-and-PINE64-support.patch
 
-Patch454: arm64-avoid-needing-console-to-enable-serial-console.patch
+# http://www.spinics.net/lists/linux-tegra/msg26029.html
+Patch426: usb-phy-tegra-Add-38.4MHz-clock-table-entry.patch
 
-Patch455: usb-make-xhci-platform-driver-use-64-bit-or-32-bit-D.patch
+# http://patchwork.ozlabs.org/patch/587554/
+Patch430: ARM-tegra-usb-no-reset.patch
 
-Patch456: arm64-acpi-drop-expert-patch.patch
+Patch431: arm-i.MX6-Utilite-device-dtb.patch
 
-Patch457: ARM-tegra-usb-no-reset.patch
+# http://www.spinics.net/lists/linux-tegra/msg25152.html
+Patch432: Fix-tegra-to-use-stdout-path-for-serial-console.patch
 
-Patch458: ARM-dts-Add-am335x-bonegreen.patch
+Patch433: bcm283x-Pull-upstream-fixes-plus-iproc-mmc-driver.patch
 
-Patch459: 0001-watchdog-omap_wdt-fix-null-pointer-dereference.patch
+# http://www.spinics.net/lists/netdev/msg369442.html
+Patch434: revert-stmmac-Fix-eth0-No-PHY-found-regression.patch
+Patch435: stmmac-fix-MDIO-settings.patch
 
-Patch460: mfd-wm8994-Ensure-that-the-whole-MFD-is-built-into-a.patch
+Patch436: ARM-mvebu-change-order-of-ethernet-DT-nodes-on-Armada-38x.patch
 
-Patch463: arm-i.MX6-Utilite-device-dtb.patch
+# mvebu DSA switch fixes
+# http://www.spinics.net/lists/netdev/msg370841.html http://www.spinics.net/lists/netdev/msg370842.html
+Patch438: 0001-net-dsa-mv88e6xxx-Introduce-_mv88e6xxx_phy_page_-rea.patch
+Patch439: 0002-net-dsa-mv88e6xxx-Clear-the-PDOWN-bit-on-setup.patch
+
+Patch460: lib-cpumask-Make-CPUMASK_OFFSTACK-usable-without-deb.patch
 
 Patch466: input-kill-stupid-messages.patch
 
@@ -599,111 +615,58 @@ Patch503: drm-i915-turn-off-wc-mmaps.patch
 
 Patch508: kexec-uefi-copy-secure_boot-flag-in-boot-params.patch
 
-#CVE-2015-7799 rhbz 1271134 1271135
-Patch512: isdn_ppp-Add-checks-for-allocation-failure-in-isdn_p.patch
-Patch513: ppp-slip-Validate-VJ-compression-slot-parameters-com.patch
-
-#CVE-2015-8104 rhbz 1278496 1279691
-Patch551: KVM-svm-unconditionally-intercept-DB.patch
-
-#rhbz 1269300
-Patch552: megaraid_sas-Do-not-use-PAGE_SIZE-for-max_sectors.patch
-
-#rhbz 1275490
-Patch553: ideapad-laptop-Add-Lenovo-Yoga-900-to-no_hw_rfkill-d.patch
-
-#rhbz 1279189
-Patch556: netfilter-ipset-Fix-extension-alignment.patch
-Patch557: netfilter-ipset-Fix-hash-type-expiration.patch
-Patch558: netfilter-ipset-Fix-hash-type-expire-release-empty-h.patch
-
-#rhbz 1284059
-Patch566: KEYS-Fix-handling-of-stored-error-in-a-negatively-in.patch
-
-#CVE-2015-7833 rhbz 1270158 1270160
-Patch567: usbvision-fix-crash-on-detecting-device-with-invalid.patch
-
-#CVE-2015-7515 rhbz 1285326 1285331
-Patch568: Input-aiptek-fix-crash-on-detecting-device-without-e.patch
-
-#rhbz 1287819
-Patch570: HID-multitouch-enable-palm-rejection-if-device-imple.patch
-
 #rhbz 1286293
 Patch571: ideapad-laptop-Add-Lenovo-ideapad-Y700-17ISK-to-no_h.patch
 
-#rhbz 1288687
-Patch572: alua_fix.patch
+#Required for some persistent memory options
+Patch641: disable-CONFIG_EXPERT-for-ZONE_DMA.patch
 
-#CVE-XXXX-XXXX rhbz 1291329 1291332
-Patch574: ovl-fix-permission-checking-for-setattr.patch
+#rhbz 1255325
+Patch646: HID-sony-do-not-bail-out-when-the-sixaxis-refuses-th.patch
 
-#CVE-2015-7550 rhbz 1291197 1291198
-Patch575: KEYS-Fix-race-between-read-and-revoke.patch
+#rhbz 1309658
+Patch648: 0001-mm-CONFIG_NR_ZONES_EXTENDED.patch
 
-Patch601: vrf-fix-memory-leak-on-registration.patch
+#CVE-2016-3135 rhbz 1317386 1317387
+Patch664: netfilter-x_tables-check-for-size-overflow.patch
 
-#CVE-2015-8709 rhbz 1295287 1295288
-Patch603: ptrace-being-capable-wrt-a-process-requires-mapped-u.patch
+#CVE-2016-3134 rhbz 1317383 1317384
+Patch665: netfilter-x_tables-deal-with-bogus-nextoffset-values.patch
 
-#atch604: drm-i915-shut-up-gen8-SDE-irq-dmesg-noise-again.patch
+# CVE-2016-3672 rhbz 1324749 1324750
+Patch689: x86-mm-32-Enable-full-randomization-on-i386-and-X86_.patch
 
-#CVE-2015-7513 rhbz 1284847 1296142
-Patch605: KVM-x86-Reload-pit-counters-for-all-channels-when-re.patch
+#rhbz 1302071
+Patch702: x86-build-Build-compressed-x86-kernels-as-PIE.patch
 
-#rhbz 1296677
-Patch606: HID-multitouch-Fetch-feature-reports-on-demand-for-W.patch
+# Stop splashing crap about broken firmware BGRT
+Patch704: x86-efi-bgrt-Switch-all-pr_err-to-pr_debug-for-inval.patch
 
-#rhbz 1281368
-Patch607: drm-nouveau-Fix-pre-nv50-pageflip-events-v4.patch
+#rhbz 1331092
+Patch705: mm-thp-kvm-fix-memory-corruption-in-KVM-with-THP-ena.patch
 
-#rhbz 1296820
-Patch608: drm-nouveau-pmu-do-not-assume-a-PMU-is-present.patch
+#CVE-2016-4482 rhbz 1332931 1332932
+Patch706: USB-usbfs-fix-potential-infoleak-in-devio.patch
 
-#rhbz 1083853
-Patch610: PNP-Add-Broadwell-to-Intel-MCH-size-workaround.patch
+#CVE-2016-4569 rhbz 1334643 1334645
+Patch714: ALSA-timer-Fix-leak-in-SNDRV_TIMER_IOCTL_PARAMS.patch
+Patch715: ALSA-timer-Fix-leak-in-events-via-snd_timer_user_cca.patch
+Patch716: ALSA-timer-Fix-leak-in-events-via-snd_timer_user_tin.patch
 
-#CVE-2015-7566 rhbz 1296466 1297517
-Patch623: usb-serial-visor-fix-crash-on-detecting-device-witho.patch
+#CVE-2016-0758 rhbz 1300257 1335386
+Patch717: KEYS-Fix-ASN.1-indefinite-length-object-parsing.patch
 
-#rhbz 1298309
-#atch624: drm-i915-Do-a-better-job-at-disabling-primary-plane-.patch
+#CVE-2016-4440 rhbz 1337806 1337807
+Patch719: kvm-vmx-more-complete-state-update-on-APICv-on-off.patch
 
-#rhbz 1298996
-Patch625: block-ensure-to-split-after-potentially-bouncing-a-b.patch
+#CVE-2016-4951 rhbz 1338625 1338626
+Patch720: tipc-check-nl-sock-before-parsing-nested-attributes.patch
 
-#rhbz 1298192
-Patch626: selinux-fix-bug-in-conditional-rules-handling.patch
+#CVE-2016-5243 rhbz 1343338 1343335
+Patch721: tipc-fix-an-infoleak-in-tipc_nl_compat_link_dump.patch
 
-#rhbz 1295272
-Patch627: ideapad-laptop-Add-Lenovo-Yoga-700-to-no_hw_rfkill-d.patch 
-
-Patch628: i915-stable-backports.patch
-Patch635: nouveau-stable-backports.patch
-
-#rhbz 1299810
-Patch629: SCSI-refactor-device-matching-code-in-scsi_devinfo.c.patch
-Patch630: SCSI-fix-bug-in-scsi_dev_info_list-matching.patch
-
-Patch631: btrfs-handle-invalid-num_stripes-in-sys_array.patch
-Patch632: Btrfs-fix-fitrim-discarding-device-area-reserved-for.patch
-
-Patch633: net_43.mbox
-
-#CVE-2016-0728 rhbz 1296623 1297475
-Patch634: KEYS-Fix-keyring-ref-leak-in-join_session_keyring.patch
-
-#CVE-2013-4312 rhbz 1297813 1300216
-Patch636: unix-properly-account-for-FDs-passed-over-unix-socke.patch
-
-#CVE-2016-0723 rhbz 1296253 1300224
-Patch637: tty-Fix-unsafe-ldisc-reference-via-ioctl-TIOCGETD.patch
-
-#rhbz 1279653
-Patch638: rtlwifi-rtl8821ae-Fix-5G-failure-when-EEPROM-is-inco.patch
-
-#CVE-XXXX-XXXX rhbz 1300731 1300732
-Patch639: netfilter-nf_nat_redirect-add-missing-NULL-pointer-c.patch 
+#CVE-2016-5244 rhbz 1343338 1343337
+Patch722: rds-fix-an-infoleak-in-rds_inc_info_copy.txt
 
 # END OF PATCH DEFINITIONS
 
@@ -729,6 +692,7 @@ Requires(pre): %{kernel_prereq}\
 Requires(pre): %{initrd_prereq}\
 Requires(pre): linux-firmware >= 20150904-56.git6ebf5d57\
 Requires(preun): systemd >= 200\
+Conflicts: xfsprogs < 4.3.0-1\
 Conflicts: xorg-x11-drv-vmmouse < 13.0.99\
 %{expand:%%{?kernel%{?1:_%{1}}_conflicts:Conflicts: %%{kernel%{?1:_%{1}}_conflicts}}}\
 %{expand:%%{?kernel%{?1:_%{1}}_obsoletes:Obsoletes: %%{kernel%{?1:_%{1}}_obsoletes}}}\
@@ -755,6 +719,17 @@ between the Linux kernel and userspace libraries and programs.  The
 header files define structures and constants that are needed for
 building most standard programs and are also needed for rebuilding the
 glibc package.
+
+%package cross-headers
+Summary: Header files for the Linux kernel for use by cross-glibc
+Group: Development/System
+%description cross-headers
+Kernel-cross-headers includes the C header files that specify the interface
+between the Linux kernel and userspace libraries and programs.  The
+header files define structures and constants that are needed for
+building most standard programs and are also needed for rebuilding the
+cross-glibc package.
+
 
 %package bootwrapper
 Summary: Boot wrapper files for generating combined kernel + initrd images
@@ -1407,7 +1382,7 @@ BuildKernel() {
     make -s mrproper
     cp configs/$Config .config
 
-    %if %{signmodules}
+    %if %{signkernel}%{signmodules}
     cp %{SOURCE11} certs/.
     %endif
 
@@ -1444,7 +1419,7 @@ BuildKernel() {
       cp arch/$Arch/boot/zImage.stub $RPM_BUILD_ROOT/%{image_install_path}/zImage.stub-$KernelVer || :
       cp arch/$Arch/boot/zImage.stub $RPM_BUILD_ROOT/lib/modules/$KernelVer/zImage.stub-$KernelVer || :
     fi
-    %if %{signmodules}
+    %if %{signkernel}
     # Sign the image if we're using EFI
     %pesign -s -i $KernelImage -o vmlinuz.signed
     if [ ! -s vmlinuz.signed ]; then
@@ -1529,9 +1504,35 @@ BuildKernel() {
     if [ -d arch/%{asmarch}/mach-${Flavour}/include ]; then
       cp -a --parents arch/%{asmarch}/mach-${Flavour}/include $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
     fi
+    # include a few files for 'make prepare'
+    cp -a --parents arch/arm/tools/gen-mach-types $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/arm/tools/mach-types $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+
 %endif
     cp -a include $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/include
-
+%ifarch %{ix86} x86_64
+    # files for 'make prepare' to succeed with kernel-devel
+    cp -a --parents arch/x86/entry/syscalls/syscall_32.tbl $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/entry/syscalls/syscalltbl.sh $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/entry/syscalls/syscallhdr.sh $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/entry/syscalls/syscall_64.tbl $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/tools/relocs_32.c $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/tools/relocs_64.c $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/tools/relocs.c $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/tools/relocs_common.c $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/tools/relocs.h $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents tools/include/tools/le_byteshift.h $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/purgatory/purgatory.c $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/purgatory/sha256.h $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/purgatory/sha256.c $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/purgatory/stack.S $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/purgatory/string.c $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/purgatory/setup-x86_64.S $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/purgatory/entry64.S $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/boot/string.h $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/boot/string.c $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    cp -a --parents arch/x86/boot/ctype.h $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+%endif
     # Make sure the Makefile and version.h have a matching timestamp so that
     # external modules can be built
     touch -r $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/Makefile $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/include/generated/uapi/linux/version.h
@@ -1819,11 +1820,40 @@ find $RPM_BUILD_ROOT/usr/include \
 
 %endif
 
+%if %{with_cross_headers}
+mkdir -p $RPM_BUILD_ROOT/usr/tmp-headers
+make ARCH=%{hdrarch} INSTALL_HDR_PATH=$RPM_BUILD_ROOT/usr/tmp-headers headers_install_all
+
+find $RPM_BUILD_ROOT/usr/tmp-headers/include \
+     \( -name .install -o -name .check -o \
+     	-name ..install.cmd -o -name ..check.cmd \) | xargs rm -f
+
+# Copy all the architectures we care about to their respective asm directories
+for arch in arm arm64 powerpc s390 x86 ; do
+mkdir -p $RPM_BUILD_ROOT/usr/${arch}-linux-gnu/include
+mv $RPM_BUILD_ROOT/usr/tmp-headers/include/asm-${arch} $RPM_BUILD_ROOT/usr/${arch}-linux-gnu/include/asm
+cp -a $RPM_BUILD_ROOT/usr/tmp-headers/include/asm-generic $RPM_BUILD_ROOT/usr/${arch}-linux-gnu/include/.
+done
+
+# Remove the rest of the architectures
+rm -rf $RPM_BUILD_ROOT/usr/tmp-headers/include/arch*
+rm -rf $RPM_BUILD_ROOT/usr/tmp-headers/include/asm-*
+
+# Copy the rest of the headers over
+for arch in arm arm64 powerpc s390 x86 ; do
+cp -a $RPM_BUILD_ROOT/usr/tmp-headers/include/* $RPM_BUILD_ROOT/usr/${arch}-linux-gnu/include/.
+done
+
+rm -rf $RPM_BUILD_ROOT/usr/tmp-headers
+%endif
+
 %if %{with_perf}
 # perf tool binary and supporting scripts/binaries
 %{perf_make} DESTDIR=$RPM_BUILD_ROOT lib=%{_lib} install-bin install-traceevent-plugins
 # remove the 'trace' symlink.
 rm -f %{buildroot}%{_bindir}/trace
+# remove the perf-tips
+rm -rf %{buildroot}%{_docdir}/perf-tip
 
 # python-perf extension
 %{perf_make} DESTDIR=$RPM_BUILD_ROOT install-python_ext
@@ -2003,6 +2033,12 @@ fi
 /usr/include/*
 %endif
 
+%if %{with_cross_headers}
+%files cross-headers
+%defattr(-,root,root)
+/usr/*-linux-gnu/include/*
+%endif
+
 %if %{with_bootwrapper}
 %files bootwrapper
 %defattr(-,root,root)
@@ -2120,6 +2156,7 @@ fi
 %defattr(-,root,root)\
 %{expand:%%files %{?2:%{2}-}devel}\
 %defattr(-,root,root)\
+%defverify(not mtime)\
 /usr/src/kernels/%{KVERREL}%{?2:+%{2}}\
 %{expand:%%files %{?2:%{2}-}modules-extra}\
 %defattr(-,root,root)\
@@ -2148,6 +2185,235 @@ fi
 #
 # 
 %changelog
+* Wed Jun 08 2016 Josh Boyer <jwboyer@fedoraproject.org> - 4.5.7-200
+- Linux v4.5.7
+
+* Tue Jun 07 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-5244 info leak in rds (rhbz 1343338 1343337)
+- CVE-2016-5243 info leak in tipc (rhbz 1343338 1343335)
+
+* Wed Jun 01 2016 Justin M. Forbes <jforbes@fedoraproject.org> 4.5.6-200
+- Linux v4.5.6
+
+* Mon May 23 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-4951 null ptr deref in tipc_nl_publ_dump (rhbz 1338625 1338626)
+
+* Fri May 20 2016 Justin M. Forbes <jforbes@fedoraproject.org> 4.5.5-201
+- Remove the installonly additions until dnf can handle the transition
+
+* Fri May 20 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-4440 kvm: incorrect state leading to APIC register access (rhbz 1337806 1337807)
+
+* Thu May 19 2016 Josh Boyer <jwboyer@fedoraproject.org> - 4.5.5-200
+- Linux v4.5.5
+- CVE-2016-4913 isofs: info leak with malformed NM entries (rhbz 1337528 1337529)
+
+* Mon May 16 2016 Justin M. Forbes <jforbes@fedoraproject.org>
+- Disable CONFIG_DEBUG_VM_PGFLAGS on non debug kernels (rhbz 1335173)
+
+* Mon May 16 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-3713 kvm: out-of-bounds access in set_var_mtrr_msr (rhbz 1332139 1336410)
+
+* Fri May 13 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-0758 pointer corruption in asn1 decoder (rhbz 1300257 1335386)
+
+* Wed May 11 2016 Justin M. Forbes <jforbes@fedoraproject.org> - 4.5.4-200
+- Linux v4.5.4
+
+* Tue May 10 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Enable XEN SCSI front and backend (rhbz 1334512)
+- CVE-2016-4569 info leak in sound module (rhbz 1334643 1334645)
+
+* Mon May 09 2016 Justin M. Forbes <jforbes@fedoraproject.org> -4.5.3-200
+- Linux v4.5.3 rebase
+
+* Mon May 09 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-4557 bpf: Use after free vulnerability via double fdput
+  CVE-2016-4558 bpf: refcnt overflow (rhbz 1334307 1334303 1334311)
+ 
+* Fri May 06 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Oops in propogate_mnt if first copy is slave (rhbz 1333712 1333713)
+
+* Thu May 05 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-4486 CVE-2016-4485 info leaks (rhbz 1333316 1333309 1333321)
+
+* Wed May 04 2016 Laura Abbott <labbott@fedoraproject.org> - 4.4.9-300
+- Linux v4.4.9
+
+* Wed May 04 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Enable NFC_NXP_NCI options (rhbz 1290556)
+- CVE-2016-4482 info leak in devio.c (rhbz 1332931 1332932)
+
+* Fri Apr 29 2016 Peter Robinson <pbrobinson@fedoraproject.org>
+- Add patch to fix i.MX6 graphics
+
+* Thu Apr 28 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Don't splash warnings from broken BGRT firmware implementations
+- Require /usr/bin/kernel-install (rhbz 1331012)
+
+* Tue Apr 26 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Enable IEEE802154_AT86RF230 on more arches (rhbz 1330356)
+
+* Wed Apr 20 2016 Laura Abbott <labbott@fedoraproject.org> - 4.4.8-300
+- Linux v4.4.8
+- Allow antenna selection for rtl8723be (rhbz 1309487)
+
+* Tue Apr 19 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-3955 usbip: buffer overflow by trusting length of incoming packets  (rhbz 1328478 1328479)
+
+* Fri Apr 15 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-3961 xen: hugetlbfs use may crash PV guests (rhbz 1327219 1323956)
+
+* Wed Apr 13 2016 Laura Abbott <labbott@fedoraproject.org>
+- Fix for Skylake pstate issues (rhbz 1309980)
+
+* Tue Apr 12 2016 Laura Abbott <labbott@redhat.com> - 4.4.7-300
+- Linux v4.4.7
+
+* Tue Apr 12 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix Bamboo ONE issues (rhbz 1317116)
+
+* Mon Apr 11 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-3951 usbnet: crash on invalid USB descriptors (rhbz 1324782 1324815)
+- CVE-2015-8839 ext4: data corruption due to punch hole races (rhbz 1323577 1323579)
+
+* Thu Apr 07 2016 Justin M. Forbes <jforbes@fedoraproject.org>
+- Enable Full Randomization on 32bit x86 CVE-2016-3672 (rhbz 1324749 1324750)
+
+* Thu Mar 31 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Add two more patches for CVE-2016-2184
+
+* Wed Mar 30 2016 Laura Abbott <labbott@redhat.com> - 4.4.6-301
+- Bump and build
+
+* Tue Mar 29 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-3157 xen: priv escalation on 64bit PV domains with io port access (rhbz 1315711 1321948)
+
+* Wed Mar 23 2016 Laura Abbott <labbott@fedoraproject.org>
+- drm/udl: Use unlocked gem unreferencing (rhbz 1295646)
+
+* Tue Mar 22 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-3136 mct_u232: oops on invalid USB descriptors (rhbz 1317007 1317010)
+- CVE-2016-2187 gtco: oops on invalid USB descriptors (rhbz 1317017 1317010)
+
+* Mon Mar 21 2016 Laura Abbott <labbott@fedoraproject.org>
+- uas: Limit qdepth at the scsi-host level (rhbz 1315013)
+- Fix for performance regression caused by thermal (rhbz 1317190)
+- Input: synaptics - handle spurious release of trackstick buttons, again (rhbz 1318079)
+
+* Fri Mar 18 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- ims-pcu: sanity checking on missing interfaces
+- CVE-2016-3140 digi_acceleport: oops on invalid USB descriptors (rhbz 1317010 1316995)
+- CVE-2016-3138 cdc_acm: oops on invalid USB descriptors (rhbz 1317010 1316204)
+- CVE-2016-2185 ati_remote2: oops on invalid USB descriptors (rhbz 1317014 1317471)
+- CVE-2016-2188 iowarrior: oops on invalid USB descriptors (rhbz 1317018 1317467)
+- CVE-2016-2186 powermate: oops on invalid USB descriptors (rhbz 1317015 1317464)
+- CVE-2016-3137 cypress_m8: oops on invalid USB descriptors (rhbz 1317010 1316996)
+- CVE-2016-2184 alsa: panic on invalid USB descriptors (rhbz 1317012 1317470)
+
+* Wed Mar 16 2016 Laura Abbott <labbott@redhat.com> - 4.4.6-300
+- Linux v4.4.6
+
+* Wed Mar 16 2016 Laura Abbott <labbott@redhat.com>
+- Revert patch causing radeon breakage (rhbz 1317300 1317179)
+
+* Wed Mar 16 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-3135 ipv4: DoS when destroying a network interface (rhbz 1318172 1318270)
+
+* Mon Mar 14 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-3134 netfilter: missing bounds check in ipt_entry struct (rhbz 1317383 1317384)
+- CVE-2016-3135 netfilter: size overflow in x_tables (rhbz 1317386 1317387)
+
+* Fri Mar 11 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Add patch for ICP DAS I-756xU devices (rhbz 1316136)
+
+* Thu Mar 10 2016 Laura Abbott <labbott@redhat.com>
+- cdc-acm: fix NULL pointer reference (rhbz 1316719)
+
+* Wed Mar 09 2016 Laura Abbott <labbott@redhat.com> - 4.4.5-300
+- Linux v4.4.5
+- Fix for known arm64 bootup issue
+
+* Fri Mar 04 2016 Laura Abbott <labbott@redhat.com> -4.4.4-301
+- Require updated XFS utilities
+
+* Thu Mar 03 2016 Laura Abbott <labbott@redhat.com> - 4.4.4-300
+- Linux v4.4.4
+- Switch back to not using CONFIG_ACPI_REV_OVERRIDE_POSSIBLE
+
+* Thu Mar 03 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Partial SMAP bypass on 64-bit kernels (rhbz 1314253 1314255)
+
+* Wed Mar 02 2016 Laura Abbott <labbott@redhat.com>
+- Fix for flickering on Intel graphics (rhbz 1310252 1313318)
+
+* Wed Mar 02 2016 Laura Abbott <labbott@redhat.com>
+- Re-enable dropped CONFIG_ACPI_REV_OVERRIDE_POSSIBLE (rhbz 1313434)
+
+* Wed Mar 02 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- pipe: limit the per-user amount of pages allocated in pipes (rhbz 1313428 1313433)
+
+* Fri Feb 26 2016 Laura Abbott <labbott@fedoraproject.org> - 4.4.3-300
+- Linux v4.4.3
+- Fix automounting behavior of ATA drives (rhbz 1310682)
+- Fix suspend blacklight blanking behavior
+
+* Thu Feb 25 2016 Peter Robinson <pbrobinson@fedoraproject.org>
+- Fix deferred nouveau module loading on tegra
+
+* Wed Feb 24 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-2550 af_unix: incorrect accounting on in-flight fds (rhbz 1311517 1311518)
+
+* Tue Feb 23 2016 Laura Abbott <labbott@fedoraproject.org> - 4.4.2-301
+- Fix a known use after free issue in the USB hub code
+- Fix AMD IOMMU warning spew on every boot (rhbz 1310258)
+
+* Sat Feb 20 2016 Peter Robinson <pbrobinson@fedoraproject.org>
+- Drop AMD xgbe-a0 driver (fix aarch64 FTBFS)
+- Minor aarch64/ARMv7 config cleanup
+- ARM: enable nvmem drivers
+
+* Thu Feb 18 2016 Laura Abbott <labbott@fedoraproject.org> - 4.4.2-300
+- Linux v4.4.2
+
+* Thu Feb 18 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2015-8812 cxgb3 use after free (rhbz 1303532 1309548)
+
+* Wed Feb 17 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Backport mgag200 cursor hang fix (rhbz 1305181 1299901)
+
+* Tue Feb 16 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Backport fix for elantech touchpads (rhbz 1306987)
+
+* Mon Feb 15 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-2383 incorrect branch fixups for eBPG allow arbitrary reads (rhbz 1308452 1308453)
+- CVE-2016-2384 double free in usb-audio from invalid USB descriptor (rhbz 1308444 1308445)
+
+* Tue Feb 09 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-0617 fix hugetlbfs inode.c issues (rhbz 1305803 1305804)
+
+* Tue Feb 02 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Backport patch to fix memory leak in rtlwifi USB devices (rhbz 1303270)
+
+* Sun Jan 31 2016 Josh Boyer <jwboyer@fedoraproject.org> - 4.3.5-300
+- Linux v4.3.5
+
+* Fri Jan 29 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Backport HID sony patch to fix some gamepads (rhbz 1255235)
+
+* Thu Jan 28 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix issues with ivtv driver on PVR350 devices (rhbz 1278942)
+- Add patches to fix suprious NEWLINK netlink messages (rhbz 1302037)
+
+* Mon Jan 25 2016 Josh Boyer <jwboyer@fedoraproject.org> - 4.3.4-300
+- Add patch to fix some Elan touchpads (rhbz 1296677)
+
+* Sat Jan 23 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Linux v4.3.4
+
+* Fri Jan 22 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix backtrace from PNP conflict on Haswell-ULT (rhbz 1300955)
+
 * Thu Jan 21 2016 Josh Boyer <jwboyer@fedoraproject.org>
 - CVE-XXXX-XXXX missing null ptr check in nf_nat_redirect_ipv4 (rhbz 1300731 1300732)
 - Fix incorrect country code issue on RTL8812AE devices (rhbz 1279653)
