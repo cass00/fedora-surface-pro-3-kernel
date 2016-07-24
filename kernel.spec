@@ -42,7 +42,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 992
+%global baserelease 993
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -1190,8 +1190,8 @@ if [ ! -d kernel-%{kversion}%{?dist}/vanilla-%{vanillaversion} ]; then
 %endif
 %endif
     git init
-    git config user.email "tusklahoma@gmail.com"
-    git config user.name "Donavan Lance"
+    git config user.email "stefan.ku@gmx.de"
+    git config user.name "Stefan Kuczera"
     git config gc.auto 0
     git add .
     git commit -a -q -m "baseline"
@@ -1215,8 +1215,8 @@ cp -al vanilla-%{vanillaversion} linux-%{KVERREL}
 cd linux-%{KVERREL}
 if [ ! -d .git ]; then
     git init
-    git config user.email "tuskahoma@gmail.com"
-    git config user.name "Donavan Lance"
+    git config user.email "stefan.ku@gmx.de"
+    git config user.name "Stefan Kuczera"
     git config gc.auto 0
     git add .
     git commit -a -q -m "baseline"
