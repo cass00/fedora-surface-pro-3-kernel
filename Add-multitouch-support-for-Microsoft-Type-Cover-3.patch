@@ -1,4 +1,4 @@
-From 62db744f4cbdf50533f10595a0e0bf834f1f55ef Mon Sep 17 00:00:00 2001
+From 40eaf8724ec0ea98a5c77e84c2472fe22df774dc Mon Sep 17 00:00:00 2001
 From: Donavan Lance <tusklahoma@gmail.com>
 Date: Mon, 2 Nov 2015 16:06:40 -0500
 Subject: [PATCH] Add multitouch support for Microsoft Type Cover 3
@@ -20,7 +20,7 @@ Signed-off-by: Donavan Lance <tusklahoma@gmail.com>
  5 files changed, 36 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/hid/hid-core.c b/drivers/hid/hid-core.c
-index 7e89288..ce22322 100644
+index 4f9c5c6..fa261aa 100644
 --- a/drivers/hid/hid-core.c
 +++ b/drivers/hid/hid-core.c
 @@ -724,11 +724,7 @@ static void hid_scan_collection(struct hid_parser *parser, unsigned type)
@@ -36,7 +36,7 @@ index 7e89288..ce22322 100644
  	    hid->group == HID_GROUP_MULTITOUCH)
  		hid->group = HID_GROUP_GENERIC;
  
-@@ -1928,10 +1924,6 @@ static const struct hid_device_id hid_have_special_driver[] = {
+@@ -1975,10 +1971,6 @@ static const struct hid_device_id hid_have_special_driver[] = {
  	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_DIGITAL_MEDIA_3K) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_WIRELESS_OPTICAL_DESKTOP_3_0) },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_OFFICE_KB) },
@@ -44,14 +44,14 @@ index 7e89288..ce22322 100644
 -	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_TYPE_COVER_PRO_3_2) },
 -	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_TYPE_COVER_PRO_3_JP) },
 -	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_TYPE_COVER_3) },
- 	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_POWER_COVER) },
- 	{ HID_USB_DEVICE(USB_VENDOR_ID_MONTEREY, USB_DEVICE_ID_GENIUS_KB29E) },
- 	{ HID_USB_DEVICE(USB_VENDOR_ID_MSI, USB_DEVICE_ID_MSI_GT683R_LED_PANEL) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_DIGITAL_MEDIA_7K) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_DIGITAL_MEDIA_600) },
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_DIGITAL_MEDIA_3KV1) },
 diff --git a/drivers/hid/hid-ids.h b/drivers/hid/hid-ids.h
-index b6ff6e7..53a9b0c 100644
+index 0238f01..1f7753b 100644
 --- a/drivers/hid/hid-ids.h
 +++ b/drivers/hid/hid-ids.h
-@@ -687,6 +687,10 @@
+@@ -696,6 +696,10 @@
  #define USB_DEVICE_ID_MS_TYPE_COVER_PRO_3_2  0x07e2
  #define USB_DEVICE_ID_MS_TYPE_COVER_PRO_3_JP 0x07dd
  #define USB_DEVICE_ID_MS_TYPE_COVER_3    0x07de
@@ -63,10 +63,10 @@ index b6ff6e7..53a9b0c 100644
  
  #define USB_VENDOR_ID_MOJO		0x8282
 diff --git a/drivers/hid/hid-microsoft.c b/drivers/hid/hid-microsoft.c
-index 77a2cf3..3110927 100644
+index e924d55..b88a429 100644
 --- a/drivers/hid/hid-microsoft.c
 +++ b/drivers/hid/hid-microsoft.c
-@@ -276,14 +276,6 @@ static const struct hid_device_id ms_devices[] = {
+@@ -282,14 +282,6 @@ static const struct hid_device_id ms_devices[] = {
  		.driver_data = MS_NOGET },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_COMFORT_MOUSE_4500),
  		.driver_data = MS_DUPLICATE_USAGES },
@@ -80,12 +80,12 @@ index 77a2cf3..3110927 100644
 -		.driver_data = MS_HIDINPUT },
  	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_POWER_COVER),
  		.driver_data = MS_HIDINPUT },
- 
+ 	{ HID_USB_DEVICE(USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_COMFORT_KEYBOARD),
 diff --git a/drivers/hid/hid-multitouch.c b/drivers/hid/hid-multitouch.c
-index 296d499..8b77ce2 100644
+index 2af2c81..8d381e4 100644
 --- a/drivers/hid/hid-multitouch.c
 +++ b/drivers/hid/hid-multitouch.c
-@@ -1346,6 +1346,33 @@ static const struct hid_device_id mt_devices[] = {
+@@ -1384,6 +1384,33 @@ static const struct hid_device_id mt_devices[] = {
  		MT_USB_DEVICE(USB_VENDOR_ID_ILITEK,
  			USB_DEVICE_ID_ILITEK_MULTITOUCH) },
  
@@ -120,10 +120,10 @@ index 296d499..8b77ce2 100644
  	{ .driver_data = MT_CLS_CONFIDENCE_MINUS_ONE,
  		MT_USB_DEVICE(USB_VENDOR_ID_ASUS,
 diff --git a/drivers/hid/usbhid/hid-quirks.c b/drivers/hid/usbhid/hid-quirks.c
-index 7dd0953..1fdf81f 100644
+index 53fc856..03b2c45 100644
 --- a/drivers/hid/usbhid/hid-quirks.c
 +++ b/drivers/hid/usbhid/hid-quirks.c
-@@ -92,6 +92,10 @@ static const struct hid_blacklist {
+@@ -94,6 +94,10 @@ static const struct hid_blacklist {
  	{ USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_TYPE_COVER_PRO_3_2, HID_QUIRK_NO_INIT_REPORTS },
  	{ USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_TYPE_COVER_PRO_3_JP, HID_QUIRK_NO_INIT_REPORTS },
  	{ USB_VENDOR_ID_MICROSOFT, USB_DEVICE_ID_MS_TYPE_COVER_3, HID_QUIRK_NO_INIT_REPORTS },

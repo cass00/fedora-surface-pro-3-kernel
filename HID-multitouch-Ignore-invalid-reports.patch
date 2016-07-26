@@ -1,7 +1,7 @@
-From a84d692a5e0f894d7e9c81208197423d023f50d9 Mon Sep 17 00:00:00 2001
+From e2b8435fa70b68e4994db068e0f1c95d64ac8d05 Mon Sep 17 00:00:00 2001
 From: Daniel Martin <consume.noise@gmail.com>
 Date: Fri, 2 Oct 2015 10:05:29 +0200
-Subject: [PATCH 1/4] HID: multitouch: Ignore invalid reports
+Subject: [PATCH] HID: multitouch: Ignore invalid reports
 
 Drop reports with invalid values.
 
@@ -11,10 +11,10 @@ Signed-off-by: Daniel Martin <consume.noise@gmail.com>
  1 file changed, 5 insertions(+)
 
 diff --git a/drivers/hid/hid-multitouch.c b/drivers/hid/hid-multitouch.c
-index 7c81125..1cc1108 100644
+index c741f5e..ac6a349 100644
 --- a/drivers/hid/hid-multitouch.c
 +++ b/drivers/hid/hid-multitouch.c
-@@ -559,6 +559,10 @@ static void mt_complete_slot(struct mt_device *td, struct input_dev *input)
+@@ -618,6 +618,10 @@ static void mt_complete_slot(struct mt_device *td, struct input_dev *input)
  	    td->num_received >= td->num_expected)
  		return;
  
@@ -25,7 +25,7 @@ index 7c81125..1cc1108 100644
  	if (td->curvalid || (td->mtclass.quirks & MT_QUIRK_ALWAYS_VALID)) {
  		int slotnum = mt_compute_slot(td, input);
  		struct mt_slot *s = &td->curdata;
-@@ -597,6 +601,7 @@ static void mt_complete_slot(struct mt_device *td, struct input_dev *input)
+@@ -656,6 +660,7 @@ static void mt_complete_slot(struct mt_device *td, struct input_dev *input)
  		}
  	}
  
@@ -34,5 +34,5 @@ index 7c81125..1cc1108 100644
  }
  
 -- 
-2.1.4
+2.5.5
 

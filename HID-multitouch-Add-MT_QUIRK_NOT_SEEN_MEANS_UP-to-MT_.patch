@@ -1,7 +1,7 @@
-From 909b254eb818f63ba0e541abbbe829d923c19234 Mon Sep 17 00:00:00 2001
+From 1a7bb0e0796fda30f5137558d79b07cf05b7a824 Mon Sep 17 00:00:00 2001
 From: Daniel Martin <consume.noise@gmail.com>
 Date: Fri, 2 Oct 2015 10:07:15 +0200
-Subject: [PATCH 2/4] HID: multitouch: Add MT_QUIRK_NOT_SEEN_MEANS_UP to
+Subject: [PATCH] HID: multitouch: Add MT_QUIRK_NOT_SEEN_MEANS_UP to
  MT_CLS_WIN_8
 
 The firmware found in the touch screen of an SP3 is buggy and may miss
@@ -14,7 +14,7 @@ Signed-off-by: Daniel Martin <consume.noise@gmail.com>
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/hid/hid-multitouch.c b/drivers/hid/hid-multitouch.c
-index 1cc1108..625f1ee 100644
+index ac6a349..2af2c81 100644
 --- a/drivers/hid/hid-multitouch.c
 +++ b/drivers/hid/hid-multitouch.c
 @@ -206,7 +206,8 @@ static struct mt_class mt_classes[] = {
@@ -27,7 +27,7 @@ index 1cc1108..625f1ee 100644
  	{ .name = MT_CLS_EXPORT_ALL_INPUTS,
  		.quirks = MT_QUIRK_ALWAYS_VALID |
  			MT_QUIRK_CONTACT_CNT_ACCURATE,
-@@ -1054,7 +1055,8 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
+@@ -1131,7 +1132,8 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
  		return -ENOMEM;
  	}
  
@@ -38,5 +38,5 @@ index 1cc1108..625f1ee 100644
  
  	ret = hid_parse(hdev);
 -- 
-2.1.4
+2.5.5
 
