@@ -42,7 +42,7 @@ Summary: The Linux kernel
 # For non-released -rc kernels, this will be appended after the rcX and
 # gitX tags, so a 3 here would become part of release "0.rcX.gitX.3"
 #
-%global baserelease 993
+%global baserelease 994
 %global fedora_build %{baserelease}
 
 # base_sublevel is the kernel version we're starting with and patching
@@ -125,7 +125,7 @@ Summary: The Linux kernel
 # Set debugbuildsenabled to 1 for production (build separate debug kernels)
 #  and 0 for rawhide (all kernels are debug kernels).
 # See also 'make debug' and 'make release'.
-%define debugbuildsenabled 1
+%define debugbuildsenabled 0
 
 # Want to build a vanilla kernel build without any non-upstream patches?
 %define with_vanilla %{?_with_vanilla: 1} %{?!_with_vanilla: 0}
@@ -675,7 +675,6 @@ Patch834: qla2xxx-Fix-NULL-pointer-deref-in-QLA-interrupt.patch
 
 Patch921: 6b3c33e985f20e7de07fc4b9b1a96dc452e37cb4..141bcf099076df1a74317a5b14dcd56c933b9de8.patch
 Patch922: ee6e7aa383944ce62860f35c86f1ac7da7dd27b6..5c87a55adbd5eb3536893c40086253e15ea53cd5.patch
-Patch923: c18b104dd2495da60ec92f40e14559591644cc3a..473dfbfa09934cea0d08cc9023c749a5fce10cb0.patch
 Patch924: 473dfbfa09934cea0d08cc9023c749a5fce10cb0..d41376ca8ba74e954ba931c69271d0b29546a202.patch
 Patch925: d41376ca8ba74e954ba931c69271d0b29546a202..5781fc29dbbd3ee5e11c1bf4fa6696ae89d19840.patch
 Patch926: fd3ed33f51c2a586412d35b4f64803f019ab589f..2af86f9d954ee86e9b1c492e025de37a1b6d2db8.patch
@@ -2202,6 +2201,9 @@ fi
 #
 # 
 %changelog
+* Sun Aug 07 2016 Stefan Kuczera <stefan.ku@gmx.de> - 4.6.4-994.surfacepro3
+- Disable debugging options.
+
 * Mon Jul 11 2016 Josh Boyer <jwboyer@fedoraproject.org> - 4.6.4-200
 - Linux v4.6.4
 
