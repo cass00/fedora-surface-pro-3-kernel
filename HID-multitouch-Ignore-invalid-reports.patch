@@ -1,17 +1,14 @@
-From e2b8435fa70b68e4994db068e0f1c95d64ac8d05 Mon Sep 17 00:00:00 2001
-From: Daniel Martin <consume.noise@gmail.com>
-Date: Fri, 2 Oct 2015 10:05:29 +0200
-Subject: [PATCH] HID: multitouch: Ignore invalid reports
+From a82279dff352f725d9e1efc4f48855d9caf29bdd Mon Sep 17 00:00:00 2001
+From: Stefan Kuczera <stefan.ku@gmx.de>
+Date: Sun, 25 Sep 2016 19:46:23 +0200
+Subject: [PATCH] update patch
 
-Drop reports with invalid values.
-
-Signed-off-by: Daniel Martin <consume.noise@gmail.com>
 ---
- drivers/hid/hid-multitouch.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/hid/hid-multitouch.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/hid/hid-multitouch.c b/drivers/hid/hid-multitouch.c
-index c741f5e..ac6a349 100644
+index fb6f1f4..b6b6293 100644
 --- a/drivers/hid/hid-multitouch.c
 +++ b/drivers/hid/hid-multitouch.c
 @@ -618,6 +618,10 @@ static void mt_complete_slot(struct mt_device *td, struct input_dev *input)
@@ -19,17 +16,18 @@ index c741f5e..ac6a349 100644
  		return;
  
 +	if (td->curdata.x == 0xffff && td->curdata.x == td->curdata.y &&
-+	    td->curdata.w == 0xffff && td->curdata.w == td->curdata.h)
++			td->curdata.w == 0xffff && td->curdata.w == td->curdata.h)
 +		goto inc_num_received;
 +
  	if (td->curvalid || (td->mtclass.quirks & MT_QUIRK_ALWAYS_VALID)) {
+ 		int active;
  		int slotnum = mt_compute_slot(td, input);
- 		struct mt_slot *s = &td->curdata;
-@@ -656,6 +660,7 @@ static void mt_complete_slot(struct mt_device *td, struct input_dev *input)
+@@ -660,7 +664,7 @@ static void mt_complete_slot(struct mt_device *td, struct input_dev *input)
+ 			input_event(input, EV_ABS, ABS_MT_TOUCH_MINOR, minor);
  		}
  	}
- 
-+inc_num_received:
+-
++ inc_num_received:
  	td->num_received++;
  }
  
