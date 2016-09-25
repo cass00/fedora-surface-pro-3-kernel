@@ -48,7 +48,7 @@ Summary: The Linux kernel
 # base_sublevel is the kernel version we're starting with and patching
 # on top of -- for example, 3.1-rc7-git1 starts with a 3.0 base,
 # which yields a base_sublevel of 0.
-%define base_sublevel 6
+%define base_sublevel 7
 
 ## If this is a released kernel ##
 %if 0%{?released_kernel}
@@ -371,7 +371,7 @@ Requires: kernel-modules-uname-r = %{KVERREL}%{?variant}
 # List the packages used during the kernel build
 #
 BuildRequires: kmod, patch, bash, sh-utils, tar, git
-BuildRequires: bzip2, xz, findutils, gzip, m4, perl, perl-Carp, make, diffutils, gawk
+BuildRequires: bzip2, xz, findutils, gzip, m4, perl, perl-Carp, perl-devel, perl-generators, make, diffutils, gawk
 BuildRequires: gcc, binutils, redhat-rpm-config, hmaccalc
 BuildRequires: net-tools, hostname, bc
 %if %{with_sparse}
@@ -504,15 +504,11 @@ Patch9999: Microsoft-Surface-Pro-4-Surface-Book-camera-support.patch
 # Standalone patches
 Patch420: arm64-avoid-needing-console-to-enable-serial-console.patch
 
-Patch421: arm64-acpi-drop-expert-patch.patch
-
 # http://www.spinics.net/lists/arm-kernel/msg490981.html
 Patch422: geekbox-v4-device-tree-support.patch
 
-# http://www.spinics.net/lists/arm-kernel/msg483898.html
-Patch423: Initial-AllWinner-A64-and-PINE64-support.patch
-
-Patch424: net-smsc911x-Fix-bug-where-PHY-interrupts-are-overwritten-by-0.patch
+Patch424: arm64-pcie-acpi.patch
+Patch425: arm64-pcie-quirks-xgene.patch
 
 # http://www.spinics.net/lists/linux-tegra/msg26029.html
 Patch426: usb-phy-tegra-Add-38.4MHz-clock-table-entry.patch
@@ -520,12 +516,9 @@ Patch426: usb-phy-tegra-Add-38.4MHz-clock-table-entry.patch
 # http://patchwork.ozlabs.org/patch/587554/
 Patch430: ARM-tegra-usb-no-reset.patch
 
-# http://www.spinics.net/lists/linux-tegra/msg25152.html
-Patch432: Fix-tegra-to-use-stdout-path-for-serial-console.patch
+Patch431: bcm283x-upstream-fixes.patch
 
-Patch431: arm-i.MX6-Utilite-device-dtb.patch
-
-Patch433: bcm283x-upstream-fixes.patch
+Patch432: arm-i.MX6-Utilite-device-dtb.patch
 
 Patch460: lib-cpumask-Make-CPUMASK_OFFSTACK-usable-without-deb.patch
 
@@ -563,8 +556,6 @@ Patch482: Add-option-to-automatically-enforce-module-signature.patch
 
 Patch483: efi-Disable-secure-boot-if-shim-is-in-insecure-mode.patch
 
-Patch484: efi-Make-EFI_SECURE_BOOT_SIG_ENFORCE-depend-on-EFI.patch
-
 Patch485: efi-Add-EFI_SECURE_BOOT-bit.patch
 
 Patch486: hibernate-Disable-in-a-signed-modules-environment.patch
@@ -573,6 +564,9 @@ Patch487: Add-EFI-signature-data-types.patch
 
 Patch488: Add-an-EFI-signature-blob-parser-and-key-loader.patch
 
+# This doesn't apply. It seems like it could be replaced by
+# https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=5ac7eace2d00eab5ae0e9fdee63e38aee6001f7c
+# which has an explicit line about blacklisting
 Patch489: KEYS-Add-a-system-blacklist-keyring.patch
 
 Patch490: MODSIGN-Import-certificates-from-UEFI-Secure-Boot.patch
@@ -608,28 +602,8 @@ Patch508: kexec-uefi-copy-secure_boot-flag-in-boot-params.patch
 #Required for some persistent memory options
 Patch641: disable-CONFIG_EXPERT-for-ZONE_DMA.patch
 
-#CVE-2016-4482 rhbz 1332931 1332932
-Patch706: USB-usbfs-fix-potential-infoleak-in-devio.patch
-
-#CVE-2016-4569 rhbz 1334643 1334645
-Patch714: ALSA-timer-Fix-leak-in-SNDRV_TIMER_IOCTL_PARAMS.patch
-Patch715: ALSA-timer-Fix-leak-in-events-via-snd_timer_user_cca.patch
-Patch716: ALSA-timer-Fix-leak-in-events-via-snd_timer_user_tin.patch
-
-#CVE-2016-4440 rhbz 1337806 1337807
-Patch719: kvm-vmx-more-complete-state-update-on-APICv-on-off.patch
-
-#CVE-2016-5243 rhbz 1343338 1343335
-Patch721: tipc-fix-an-infoleak-in-tipc_nl_compat_link_dump.patch
-
-#CVE-2016-5244 rhbz 1343338 1343337
-Patch722: rds-fix-an-infoleak-in-rds_inc_info_copy.txt
-
-#CVE-2016-4470 rhbz 1341716 1346626
-Patch727: KEYS-potential-uninitialized-variable.patch
-
-#rhbz 1338025
-Patch728: hp-wmi-fix-wifi-cannot-be-hard-unblock.patch
+#CVE-2016-3134 rhbz 1317383 1317384
+Patch665: netfilter-x_tables-deal-with-bogus-nextoffset-values.patch
 
 #skl_update_other_pipe_wm issue patch-series from drm-next, rhbz 1305038
 Patch801: 0001-drm-i915-Reorganize-WM-structs-unions-in-CRTC-state.patch
@@ -650,28 +624,32 @@ Patch815: 0015-drm-i915-gen9-Calculate-watermarks-during-atomic-che.patch
 Patch816: 0016-drm-i915-gen9-Reject-display-updates-that-exceed-wm-.patch
 Patch817: 0017-drm-i915-Remove-wm_config-from-dev_priv-intel_atomic.patch
 
-#other drm/kms fixes (most Cc-ed stable)
-Patch821: 0001-drm-mgag200-Black-screen-fix-for-G200e-rev-4.patch
-Patch822: 0002-drm-nouveau-fbcon-fix-out-of-bounds-memory-accesses.patch
-Patch823: 0003-drm-nouveau-disp-sor-gf119-both-links-use-the-same-t.patch
-Patch824: 0004-drm-nouveau-disp-sor-gm107-training-pattern-register.patch
-Patch825: 0005-i915-fbc-Disable-on-HSW-by-default-for-now.patch
+#rhbz 1353558
+Patch844: 0001-selinux-Only-apply-bounds-checking-to-source-types.patch
 
-#CVE-2016-5829 rhbz 1350509 1350513
-Patch826: HID-hiddev-validate-num_values-for-HIDIOCGUSAGES-HID.patch
+#rhbz 1365940
+Patch856: 0001-udp-fix-poll-issue-with-zero-sized-packets.patch
 
-#CVE-2016-1237 rhbz 1350845 1350847
-Patch830: posix_acl-Add-set_posix_acl.patch
-Patch831: nfsd-check-permissions-when-setting-ACLs.patch
+#rhbz 13700161
+Patch857: kernel-panic-TPROXY-vanilla-4.7.1.patch
 
-#CVE-2016-6156 rhbz 1353490 1353491
-Patch832: platform-chrome-cros_ec_dev-double-fetch-bug-in-ioct.patch
+# lkml.kernel.org/r/<20160822093249.GA14916@dhcp22.suse.cz>
+Patch858: 0001-OOM-detection-regressions-since-4.7.patch
 
-#rbhz 1351205
-Patch833: drm-nouveau-disp-sor-gf119-select-correct-sor-when.patch
+#rhbz 1360688
+Patch859: rc-core-fix-repeat-events.patch
 
-#rhbz 1346753
-Patch834: qla2xxx-Fix-NULL-pointer-deref-in-QLA-interrupt.patch
+#rhbz 1350174
+Patch862: tip-x86-boot-x86-KASLR-x86-power-Remove-x86-hibernation-restrictions.patch
+
+#rhbz 1374212
+Patch863: 0001-cpupower-Correct-return-type-of-cpu_power_is_cpu_onl.patch
+
+#ongoing complaint, full discussion delayed until ksummit/plumbers
+Patch864: 0001-iio-Use-event-header-from-kernel-tree.patch
+
+#CVE-2016-7425 rhbz 1377330 1377331
+Patch865: arcmsr-buffer-overflow-in-archmsr_iop_message_xfer.patch
 
 Patch921: 6b3c33e985f20e7de07fc4b9b1a96dc452e37cb4..141bcf099076df1a74317a5b14dcd56c933b9de8.patch
 Patch922: ee6e7aa383944ce62860f35c86f1ac7da7dd27b6..5c87a55adbd5eb3536893c40086253e15ea53cd5.patch
@@ -1514,6 +1492,8 @@ BuildKernel() {
 %ifarch aarch64
     # arch/arm64/include/asm/xen references arch/arm
     cp -a --parents arch/arm/include/asm/xen $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
+    # arch/arm64/include/asm/opcodes.h references arch/arm
+    cp -a --parents arch/arm/include/asm/opcodes.h $RPM_BUILD_ROOT/lib/modules/$KernelVer/build/
 %endif
     # include the machine specific headers for ARM variants, if available.
 %ifarch %{arm}
@@ -2117,7 +2097,7 @@ fi
 %ifarch %{cpupowerarchs}
 %files -n kernel-tools-libs
 %{_libdir}/libcpupower.so.0
-%{_libdir}/libcpupower.so.0.0.0
+%{_libdir}/libcpupower.so.0.0.1
 
 %files -n kernel-tools-libs-devel
 %{_libdir}/libcpupower.so
@@ -2201,8 +2181,85 @@ fi
 #
 # 
 %changelog
-* Sun Aug 07 2016 Stefan Kuczera <stefan.ku@gmx.de> - 4.6.4-994.surfacepro3
-- Disable debugging options.
+* Mon Sep 19 2016 Justin M. Forbes <jforbes@fedoraproject.org>
+- CVE-2016-7425 SCSI arcmsr buffer overflow (rhbz 1377330 1377331)
+
+* Thu Sep 15 2016 Laura Abbott <labbott@fedoraproject.org> - 4.7.4-100
+- Linux v4.7.4
+
+* Wed Sep 14 2016 Laura Abbott <labbott@fedoraproject.org>
+- Fix for incorrect return checking in cpupower (rhbz 1374212)
+- Let iio tools build on older kernels
+
+* Wed Sep 07 2016 <labbott@fedoraproject.org> - 4.7.3-100
+- Linux v4.7.3
+- Silence KASLR warning (rhbz 1350174)
+
+* Fri Sep 02 2016 <labbott@fedoraproject.org>
+- Add fix for known cgroup deadlock
+
+* Mon Aug 29 2016 Laura Abbott <labbott@fedoraproject.org>
+- Add event decoding fix (rhbz 1360688)
+- Add fix for NFS client issue (rhbz 1371237)
+
+* Sun Aug 28 2016 Peter Robinson <pbrobinson@fedoraproject.org>
+- Minor ARM updates
+
+* Fri Aug 26 2016 Laura Abbott <labbott@redhat.com> - 4.7.2-101
+- Bump and build
+
+* Thu Aug 25 2016 Laura Abbott <labbott@fedoraproject.org>
+- Fix for TPROXY panic (rhbz 1370061)
+- Fix for known OOM regression
+
+* Tue Aug 23 2016 Laura Abbott <labbot@fedoraproject.org>
+- Fix for inabiltiy to send zero sized UDP packets (rhbz 1365940)
+
+* Tue Aug 23 2016 Justin M. Forbes <jforbes@fedoraproject.org> 
+- CVE-2016-6480 aacraid: Check size values after double-fetch from user (rhbz 1362466 1362467)
+
+* Mon Aug 22 2016 Laura Abbott <labbott@redhat.com> - 4.7.2-100
+- Linux v4.7.2
+
+* Wed Aug 17 2016 Laura Abbott <labbott@fedoraproject.org> - 4.7.1-100
+- Linux v4.7.1
+
+* Wed Aug 17 2016 Justin M. Forbes <jforbes@fedoraproject.org> - 4.6.7-200
+- CVE-2016-6828 tcp fix use after free in tcp_xmit_retransmit_queue (rhbz 1367091 1367092)
+
+* Tue Aug 16 2016 Laura Abbott <labbott@fedoraproject.org>
+- Linux v4.6.7
+- Fix for crash seen with Open Stack (rhbz 1361414)
+
+* Fri Aug 12 2016 Laura Abbott <labbott@fedoraproject.org>
+- Bring in fixes from f24
+ - Sync skylake hdaudio __unclaimed_reg WARN_ON fix with latest upstream version
+ - Drop drm-i915-skl-Add-support-for-the-SAGV-fix-underrun-hangs.patch for now
+
+* Wed Aug 10 2016 Laura Abbott <labbott@fedoraproject.org> - 4.6.6-200
+- Linux v4.6.6
+
+* Mon Aug 08 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Build CONFIG_POWERNV_CPUFREQ in on ppc64* (rhbz 1351346)
+
+* Thu Jul 28 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-5412 powerpc: kvm: Infinite loop in HV mode (rhbz 1349916 1361040)
+
+* Wed Jul 27 2016 Josh Boyer <jwboyer@fedoraproject.org> - 4.6.5-200
+- Linux v4.6.5
+
+* Mon Jul 25 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- CVE-2016-6136 race condition in auditsc.c (rhbz 1353533 1353534)
+
+* Mon Jul 25 2016 Justin Forbes <jforbes@fedoraproject.org>
+- CVE-2016-5400 Fix memory leak in airspy driver (rhbz 1358184 1358186)
+
+* Thu Jul 14 2016 Josh Boyer <jwboyer@fedoraproject.org>
+- Fix various i915 uncore oopses (rhbz 1340218 1325020 1342722 1347681)
+
+* Tue Jul 12 2016 Josh Boyer <jwboyer@fedoraproject.org> - 4.6.4-201
+- CVE-2016-5389 CVE-2016-5696 tcp challenge ack info leak (rhbz 1354708 1355615)
+>>>>>>> 813bda51224f
 
 * Mon Jul 11 2016 Josh Boyer <jwboyer@fedoraproject.org> - 4.6.4-200
 - Linux v4.6.4
