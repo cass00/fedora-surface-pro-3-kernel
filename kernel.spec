@@ -1183,7 +1183,7 @@ if [ ! -d kernel-%{kversion}%{?dist}/vanilla-%{vanillaversion} ]; then
 %endif
 %endif
     git init
-    git config user.email "stefan.ku@gmx.de"
+    git config user.email "stefan.ku@yahoo.com"
     git config user.name "Stefan Kuczera"
     git config gc.auto 0
     git add .
